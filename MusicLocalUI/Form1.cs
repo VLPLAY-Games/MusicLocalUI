@@ -13,6 +13,8 @@ using WMPLib;
 
 namespace MusicLocalUI
 {
+
+
     public partial class MainApp : Form
     {
         private string path_to_music_folder = "";
@@ -24,6 +26,19 @@ namespace MusicLocalUI
         private Timer playbackTimer;
         private bool isUserSeeking = false;
 
+        public class AudioMetadata
+        {
+            public string Title { get; set; }
+            public string Artist { get; set; }
+            public string Duration { get; set; }
+            public string Bitrate { get; set; }
+            public string FileExtension { get; set; }
+            public string FileSize { get; set; }
+            public string CreatedDate { get; set; }
+            public string Album { get; set; }
+            public string Genre { get; set; }
+        }
+
         public MainApp()
         {
             InitializeComponent();
@@ -34,6 +49,20 @@ namespace MusicLocalUI
             playbackTimer.Tick += PlaybackTimer_Tick;
             playbackProgressBar.MouseDown += (s, e) => isUserSeeking = true;
             playbackProgressBar.MouseUp += PlaybackProgressBar_MouseUp;
+            player.PlayStateChange += (int newState) =>
+            {
+                if (newState == (int)WMPPlayState.wmppsMediaEnded)
+                {
+                    // Вызываем в UI-потоке
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        NextPlay_Click(null, null);
+                    });
+                }
+
+                // Обновляем время при любом изменении состояния
+                this.Invoke((MethodInvoker)UpdateTimeDisplay);
+            };
         }
 
         private void select_folder_Click(object sender, EventArgs e)
@@ -294,7 +323,22 @@ namespace MusicLocalUI
                 playbackProgressBar.Value = 0;
                 playbackTimer.Start();
 
-                NowPlaying.Text = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
+                var metadata = GetAudioMetadata(filePath);
+
+                // Обновляем элементы управления на форме
+                TrackDuration.Text = "Duration: " + metadata.Duration;
+                TrackBitRate.Text = "Bit rate: " + metadata.Bitrate;
+                TrackExtension.Text = "Extension: " + metadata.FileExtension;
+                TrackSize.Text = "Size: " + metadata.FileSize;
+                TrackCreated.Text = "Created: " + metadata.CreatedDate;
+                
+
+
+                string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
+                NowPlaying.Text = MusicName.Length > 70
+                    ? MusicName.Insert(60, Environment.NewLine + "                    ")
+                    : MusicName;
+
             }
             catch (Exception ex)
             {
@@ -364,11 +408,21 @@ namespace MusicLocalUI
             {
                 if (audioFilesList.Count == 0) return;
 
-                int currentIndex = musicListBox.SelectedIndex;
-                int newIndex = currentIndex >= audioFilesList.Count - 1 ? 0 : currentIndex + 1;
+                int newIndex;
+                if (musicListBox.SelectedIndex < 0)
+                {
+                    newIndex = 0;
+                }
+                else
+                {
+                    newIndex = (musicListBox.SelectedIndex + 1) % audioFilesList.Count;
+                }
 
                 musicListBox.SelectedIndex = newIndex;
                 PlayCurrentSelectedFile();
+
+                // Прокручиваем ListBox к текущему элементу
+                musicListBox.TopIndex = Math.Max(0, newIndex - 5);
             }
             catch (Exception ex)
             {
@@ -376,6 +430,7 @@ namespace MusicLocalUI
                               MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
 
         private void PlayCurrentSelectedFile()
         {
@@ -398,15 +453,7 @@ namespace MusicLocalUI
 
         private void PlaybackTimer_Tick(object sender, EventArgs e)
         {
-            if (player.playState == WMPPlayState.wmppsPlaying && !isUserSeeking)
-            {
-                // Обновляем прогресс-бар
-                playbackProgressBar.Maximum = (int)player.currentMedia.duration;
-                playbackProgressBar.Value = (int)player.controls.currentPosition;
-
-                // Обновляем метки времени
-                timeLabel.Text = $"{FormatTime(player.controls.currentPosition)} / {FormatTime(player.currentMedia.duration)}";
-            }
+            UpdateTimeDisplay();
         }
 
         private string FormatTime(double seconds)
@@ -425,6 +472,78 @@ namespace MusicLocalUI
                 playbackProgressBar.Value = (int)newPosition;
                 isUserSeeking = false;
             }
+        }
+        private void UpdateTimeDisplay()
+        {
+            try
+            {
+                if (player.currentMedia != null)
+                {
+                    double currentPos = player.controls.currentPosition;
+                    double totalDuration = player.currentMedia.duration;
+
+                    // Обновляем прогресс-бар
+                    playbackProgressBar.Maximum = (int)totalDuration;
+                    playbackProgressBar.Value = (int)currentPos;
+
+                    // Обновляем метку времени
+                    timeLabel.Text = $"{FormatTime(currentPos)} / {FormatTime(totalDuration)}";
+
+                    // Проверяем завершение трека (с небольшим запасом)
+                    if (totalDuration - currentPos < 0.5 && player.playState == WMPPlayState.wmppsPlaying)
+                    {
+                        NextPlay_Click(null, null);
+                    }
+                }
+            }
+            catch
+            {
+                // Игнорируем ошибки обновления UI
+            }
+        }
+
+        public AudioMetadata GetAudioMetadata(string filePath)
+        {
+            var metadata = new AudioMetadata();
+            var fileInfo = new FileInfo(filePath);
+
+            try
+            {
+                // Получаем техническую информацию через TagLib
+                using (var file = TagLib.File.Create(filePath))
+                {
+                    metadata.Title = file.Tag.Title ?? Path.GetFileNameWithoutExtension(filePath);
+                    metadata.Artist = file.Tag.FirstPerformer ?? "Unknown Artist";
+                    metadata.Album = file.Tag.Album ?? "Unknown Album";
+                    metadata.Genre = file.Tag.FirstGenre ?? "Unknown Genre";
+                    metadata.Duration = file.Properties.Duration.ToString(@"mm\:ss");
+                    metadata.Bitrate = $"{file.Properties.AudioBitrate} kbps";
+                }
+
+                // Получаем файловые атрибуты
+                metadata.FileExtension = fileInfo.Extension.ToUpper().TrimStart('.');
+                metadata.FileSize = FormatFileSize(fileInfo.Length);
+                metadata.CreatedDate = fileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading metadata: {ex.Message}");
+            }
+
+            return metadata;
+        }
+
+        private string FormatFileSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB" };
+            int order = 0;
+            double len = bytes;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len /= 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
 
     }

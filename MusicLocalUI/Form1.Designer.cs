@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainApp));
             this.musicListBox = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -47,6 +48,9 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.TrackExtension = new System.Windows.Forms.Label();
+            this.TrackBitRate = new System.Windows.Forms.Label();
+            this.TrackDuration = new System.Windows.Forms.Label();
             this.TotalTime = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.TotalFiles = new System.Windows.Forms.Label();
@@ -57,6 +61,8 @@
             this.PreviousPlay = new System.Windows.Forms.Button();
             this.playbackProgressBar = new System.Windows.Forms.ProgressBar();
             this.timeLabel = new System.Windows.Forms.Label();
+            this.TrackSize = new System.Windows.Forms.Label();
+            this.TrackCreated = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -239,6 +245,11 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.TrackCreated);
+            this.groupBox2.Controls.Add(this.TrackSize);
+            this.groupBox2.Controls.Add(this.TrackExtension);
+            this.groupBox2.Controls.Add(this.TrackBitRate);
+            this.groupBox2.Controls.Add(this.TrackDuration);
             this.groupBox2.Controls.Add(this.TotalTime);
             this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.label4);
@@ -249,14 +260,45 @@
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             // 
+            // TrackExtension
+            // 
+            this.TrackExtension.AutoSize = true;
+            this.TrackExtension.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackExtension.Location = new System.Drawing.Point(256, 114);
+            this.TrackExtension.Name = "TrackExtension";
+            this.TrackExtension.Size = new System.Drawing.Size(83, 20);
+            this.TrackExtension.TabIndex = 17;
+            this.TrackExtension.Text = "Extension:";
+            // 
+            // TrackBitRate
+            // 
+            this.TrackBitRate.AutoSize = true;
+            this.TrackBitRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackBitRate.Location = new System.Drawing.Point(256, 85);
+            this.TrackBitRate.Name = "TrackBitRate";
+            this.TrackBitRate.Size = new System.Drawing.Size(64, 20);
+            this.TrackBitRate.TabIndex = 16;
+            this.TrackBitRate.Text = "Bit rate:";
+            // 
+            // TrackDuration
+            // 
+            this.TrackDuration.AutoSize = true;
+            this.TrackDuration.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackDuration.Location = new System.Drawing.Point(256, 58);
+            this.TrackDuration.Name = "TrackDuration";
+            this.TrackDuration.Size = new System.Drawing.Size(74, 20);
+            this.TrackDuration.TabIndex = 15;
+            this.TrackDuration.Text = "Duration:";
+            // 
             // TotalTime
             // 
             this.TotalTime.AutoSize = true;
             this.TotalTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TotalTime.Location = new System.Drawing.Point(7, 85);
             this.TotalTime.Name = "TotalTime";
-            this.TotalTime.Size = new System.Drawing.Size(0, 20);
+            this.TotalTime.Size = new System.Drawing.Size(110, 20);
             this.TotalTime.TabIndex = 14;
+            this.TotalTime.Text = "Total duration:";
             // 
             // label8
             // 
@@ -274,8 +316,9 @@
             this.TotalFiles.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TotalFiles.Location = new System.Drawing.Point(7, 58);
             this.TotalFiles.Name = "TotalFiles";
-            this.TotalFiles.Size = new System.Drawing.Size(0, 20);
+            this.TotalFiles.Size = new System.Drawing.Size(59, 20);
             this.TotalFiles.TabIndex = 13;
+            this.TotalFiles.Text = "Found:";
             // 
             // label7
             // 
@@ -285,7 +328,7 @@
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(166, 13);
             this.label7.TabIndex = 11;
-            this.label7.Text = "v0.1.0 Made by VL_PLAY Games";
+            this.label7.Text = "v0.2.0 Made by VL_PLAY Games";
             // 
             // NowPlaying
             // 
@@ -352,6 +395,26 @@
             this.timeLabel.Size = new System.Drawing.Size(0, 13);
             this.timeLabel.TabIndex = 17;
             // 
+            // TrackSize
+            // 
+            this.TrackSize.AutoSize = true;
+            this.TrackSize.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackSize.Location = new System.Drawing.Point(256, 143);
+            this.TrackSize.Name = "TrackSize";
+            this.TrackSize.Size = new System.Drawing.Size(44, 20);
+            this.TrackSize.TabIndex = 18;
+            this.TrackSize.Text = "Size:";
+            // 
+            // TrackCreated
+            // 
+            this.TrackCreated.AutoSize = true;
+            this.TrackCreated.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackCreated.Location = new System.Drawing.Point(256, 172);
+            this.TrackCreated.Name = "TrackCreated";
+            this.TrackCreated.Size = new System.Drawing.Size(70, 20);
+            this.TrackCreated.TabIndex = 19;
+            this.TrackCreated.Text = "Created:";
+            // 
             // MainApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -369,6 +432,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.musicListBox);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainApp";
             this.Text = "Music Local UI";
             this.groupBox1.ResumeLayout(false);
@@ -411,6 +475,11 @@
         private System.Windows.Forms.Button PreviousPlay;
         private System.Windows.Forms.ProgressBar playbackProgressBar;
         private System.Windows.Forms.Label timeLabel;
+        private System.Windows.Forms.Label TrackExtension;
+        private System.Windows.Forms.Label TrackBitRate;
+        private System.Windows.Forms.Label TrackDuration;
+        private System.Windows.Forms.Label TrackSize;
+        private System.Windows.Forms.Label TrackCreated;
     }
 }
 
