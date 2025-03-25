@@ -60,4 +60,4 @@ Current version: v0.3.0
 Developed by VL_PLAY Games
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
