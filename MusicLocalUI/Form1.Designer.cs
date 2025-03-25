@@ -48,6 +48,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.TrackCreated = new System.Windows.Forms.Label();
+            this.TrackSize = new System.Windows.Forms.Label();
             this.TrackExtension = new System.Windows.Forms.Label();
             this.TrackBitRate = new System.Windows.Forms.Label();
             this.TrackDuration = new System.Windows.Forms.Label();
@@ -61,8 +63,9 @@
             this.PreviousPlay = new System.Windows.Forms.Button();
             this.playbackProgressBar = new System.Windows.Forms.ProgressBar();
             this.timeLabel = new System.Windows.Forms.Label();
-            this.TrackSize = new System.Windows.Forms.Label();
-            this.TrackCreated = new System.Windows.Forms.Label();
+            this.RepeatBut = new System.Windows.Forms.Button();
+            this.RandomBut = new System.Windows.Forms.Button();
+            this.OrderBut = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -100,6 +103,9 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.OrderBut);
+            this.groupBox1.Controls.Add(this.RandomBut);
+            this.groupBox1.Controls.Add(this.RepeatBut);
             this.groupBox1.Controls.Add(this.folderStatusLabel);
             this.groupBox1.Controls.Add(this.scanningLabel);
             this.groupBox1.Controls.Add(this.currentFileLabel);
@@ -122,16 +128,17 @@
             // 
             this.folderStatusLabel.AutoSize = true;
             this.folderStatusLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.folderStatusLabel.Location = new System.Drawing.Point(15, 121);
+            this.folderStatusLabel.Location = new System.Drawing.Point(8, 121);
             this.folderStatusLabel.Name = "folderStatusLabel";
-            this.folderStatusLabel.Size = new System.Drawing.Size(0, 17);
+            this.folderStatusLabel.Size = new System.Drawing.Size(90, 17);
             this.folderStatusLabel.TabIndex = 16;
+            this.folderStatusLabel.Text = "Folder status";
             // 
             // scanningLabel
             // 
             this.scanningLabel.AutoSize = true;
             this.scanningLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.scanningLabel.Location = new System.Drawing.Point(6, 362);
+            this.scanningLabel.Location = new System.Drawing.Point(8, 362);
             this.scanningLabel.Name = "scanningLabel";
             this.scanningLabel.Size = new System.Drawing.Size(71, 17);
             this.scanningLabel.TabIndex = 15;
@@ -162,13 +169,14 @@
             // 
             this.scanProgressBar.Location = new System.Drawing.Point(11, 336);
             this.scanProgressBar.Name = "scanProgressBar";
-            this.scanProgressBar.Size = new System.Drawing.Size(333, 23);
+            this.scanProgressBar.Size = new System.Drawing.Size(446, 23);
             this.scanProgressBar.Step = 1;
             this.scanProgressBar.TabIndex = 11;
             this.scanProgressBar.Visible = false;
             // 
             // ChangeLangEN
             // 
+            this.ChangeLangEN.Enabled = false;
             this.ChangeLangEN.Location = new System.Drawing.Point(410, 17);
             this.ChangeLangEN.Name = "ChangeLangEN";
             this.ChangeLangEN.Size = new System.Drawing.Size(47, 23);
@@ -178,6 +186,7 @@
             // 
             // ChangeLangRU
             // 
+            this.ChangeLangRU.Enabled = false;
             this.ChangeLangRU.Location = new System.Drawing.Point(357, 17);
             this.ChangeLangRU.Name = "ChangeLangRU";
             this.ChangeLangRU.Size = new System.Drawing.Size(47, 23);
@@ -197,7 +206,7 @@
             // 
             // select_folder
             // 
-            this.select_folder.Location = new System.Drawing.Point(382, 74);
+            this.select_folder.Location = new System.Drawing.Point(375, 74);
             this.select_folder.Name = "select_folder";
             this.select_folder.Size = new System.Drawing.Size(75, 23);
             this.select_folder.TabIndex = 7;
@@ -209,7 +218,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(14, 71);
+            this.label5.Location = new System.Drawing.Point(7, 71);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(119, 24);
             this.label5.TabIndex = 6;
@@ -217,7 +226,7 @@
             // 
             // path_to_folder
             // 
-            this.path_to_folder.Location = new System.Drawing.Point(18, 98);
+            this.path_to_folder.Location = new System.Drawing.Point(11, 98);
             this.path_to_folder.Name = "path_to_folder";
             this.path_to_folder.Size = new System.Drawing.Size(439, 20);
             this.path_to_folder.TabIndex = 5;
@@ -259,6 +268,26 @@
             this.groupBox2.Size = new System.Drawing.Size(485, 242);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
+            // 
+            // TrackCreated
+            // 
+            this.TrackCreated.AutoSize = true;
+            this.TrackCreated.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackCreated.Location = new System.Drawing.Point(256, 172);
+            this.TrackCreated.Name = "TrackCreated";
+            this.TrackCreated.Size = new System.Drawing.Size(70, 20);
+            this.TrackCreated.TabIndex = 19;
+            this.TrackCreated.Text = "Created:";
+            // 
+            // TrackSize
+            // 
+            this.TrackSize.AutoSize = true;
+            this.TrackSize.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackSize.Location = new System.Drawing.Point(256, 143);
+            this.TrackSize.Name = "TrackSize";
+            this.TrackSize.Size = new System.Drawing.Size(44, 20);
+            this.TrackSize.TabIndex = 18;
+            this.TrackSize.Text = "Size:";
             // 
             // TrackExtension
             // 
@@ -328,7 +357,7 @@
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(166, 13);
             this.label7.TabIndex = 11;
-            this.label7.Text = "v0.2.0 Made by VL_PLAY Games";
+            this.label7.Text = "v0.3.0 Made by VL_PLAY Games";
             // 
             // NowPlaying
             // 
@@ -380,9 +409,9 @@
             // 
             // playbackProgressBar
             // 
-            this.playbackProgressBar.Location = new System.Drawing.Point(592, 682);
+            this.playbackProgressBar.Location = new System.Drawing.Point(616, 682);
             this.playbackProgressBar.Name = "playbackProgressBar";
-            this.playbackProgressBar.Size = new System.Drawing.Size(327, 10);
+            this.playbackProgressBar.Size = new System.Drawing.Size(356, 10);
             this.playbackProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.playbackProgressBar.TabIndex = 21;
             // 
@@ -390,30 +419,50 @@
             // 
             this.timeLabel.AutoSize = true;
             this.timeLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.timeLabel.Location = new System.Drawing.Point(519, 682);
+            this.timeLabel.Location = new System.Drawing.Point(508, 682);
             this.timeLabel.Name = "timeLabel";
-            this.timeLabel.Size = new System.Drawing.Size(0, 13);
+            this.timeLabel.Size = new System.Drawing.Size(102, 13);
             this.timeLabel.TabIndex = 17;
+            this.timeLabel.Text = "00:00:00 / 00:00:00";
             // 
-            // TrackSize
+            // RepeatBut
             // 
-            this.TrackSize.AutoSize = true;
-            this.TrackSize.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackSize.Location = new System.Drawing.Point(256, 143);
-            this.TrackSize.Name = "TrackSize";
-            this.TrackSize.Size = new System.Drawing.Size(44, 20);
-            this.TrackSize.TabIndex = 18;
-            this.TrackSize.Text = "Size:";
+            this.RepeatBut.Enabled = false;
+            this.RepeatBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RepeatBut.Location = new System.Drawing.Point(169, 179);
+            this.RepeatBut.Name = "RepeatBut";
+            this.RepeatBut.Size = new System.Drawing.Size(73, 25);
+            this.RepeatBut.TabIndex = 22;
+            this.RepeatBut.Text = "Repeat";
+            this.RepeatBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.RepeatBut.UseVisualStyleBackColor = true;
+            this.RepeatBut.Click += new System.EventHandler(this.RepeatBut_Click);
             // 
-            // TrackCreated
+            // RandomBut
             // 
-            this.TrackCreated.AutoSize = true;
-            this.TrackCreated.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackCreated.Location = new System.Drawing.Point(256, 172);
-            this.TrackCreated.Name = "TrackCreated";
-            this.TrackCreated.Size = new System.Drawing.Size(70, 20);
-            this.TrackCreated.TabIndex = 19;
-            this.TrackCreated.Text = "Created:";
+            this.RandomBut.Enabled = false;
+            this.RandomBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RandomBut.Location = new System.Drawing.Point(90, 179);
+            this.RandomBut.Name = "RandomBut";
+            this.RandomBut.Size = new System.Drawing.Size(73, 25);
+            this.RandomBut.TabIndex = 23;
+            this.RandomBut.Text = "Random";
+            this.RandomBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.RandomBut.UseVisualStyleBackColor = true;
+            this.RandomBut.Click += new System.EventHandler(this.RandomBut_Click);
+            // 
+            // OrderBut
+            // 
+            this.OrderBut.Enabled = false;
+            this.OrderBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.OrderBut.Location = new System.Drawing.Point(11, 179);
+            this.OrderBut.Name = "OrderBut";
+            this.OrderBut.Size = new System.Drawing.Size(73, 25);
+            this.OrderBut.TabIndex = 24;
+            this.OrderBut.Text = "Order";
+            this.OrderBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.OrderBut.UseVisualStyleBackColor = true;
+            this.OrderBut.Click += new System.EventHandler(this.OrderBut_Click);
             // 
             // MainApp
             // 
@@ -480,6 +529,9 @@
         private System.Windows.Forms.Label TrackDuration;
         private System.Windows.Forms.Label TrackSize;
         private System.Windows.Forms.Label TrackCreated;
+        private System.Windows.Forms.Button RepeatBut;
+        private System.Windows.Forms.Button RandomBut;
+        private System.Windows.Forms.Button OrderBut;
     }
 }
 

@@ -26,6 +26,11 @@ namespace MusicLocalUI
         private Timer playbackTimer;
         private bool isUserSeeking = false;
 
+
+        private bool orderSong = true;
+        private bool repeatSong = false;
+        private bool randomSong = false;
+
         public class AudioMetadata
         {
             public string Title { get; set; }
@@ -111,6 +116,13 @@ namespace MusicLocalUI
 
                 // Обновление статуса
                 UpdateStatusLabel();
+
+                OrderBut.Enabled = true;
+                RandomBut.Enabled = true;
+                RepeatBut.Enabled = true;
+
+                check_play_method();
+
             }
             catch (Exception ex)
             {
@@ -181,7 +193,7 @@ namespace MusicLocalUI
                 {
                     int seconds = (int)file.Properties.Duration.TotalSeconds;
                     string formatted = seconds > 0
-                        ? $"{seconds / 60}:{seconds % 60:00}"
+                        ? $"{(int)(seconds / 3600):00}:{(int)(seconds / 60) % 60:00}:{(int)seconds % 60:00}"
                         : "N/A";
                     return (seconds, formatted);
                 }
@@ -275,6 +287,7 @@ namespace MusicLocalUI
         {
             // Можно добавить предпросмотр при изменении выбора
             // или другие действия при изменении выделенного элемента
+            // потом
         }
 
         private void musicListBox_DoubleClick(object sender, EventArgs e)
@@ -335,8 +348,8 @@ namespace MusicLocalUI
 
 
                 string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
-                NowPlaying.Text = MusicName.Length > 70
-                    ? MusicName.Insert(60, Environment.NewLine + "                    ")
+                NowPlaying.Text = MusicName.Length > 65
+                    ? MusicName.Insert(63, Environment.NewLine + "                     ")
                     : MusicName;
 
             }
@@ -431,6 +444,29 @@ namespace MusicLocalUI
             }
         }
 
+        private void RandomPlay()
+        {
+            try
+            {
+                if (audioFilesList.Count == 0) return;
+
+                int newIndex;
+                Random rnd = new Random();
+                newIndex = rnd.Next(audioFilesList.Count);
+
+                musicListBox.SelectedIndex = newIndex;
+                PlayCurrentSelectedFile();
+
+                // Прокручиваем ListBox к текущему элементу
+                musicListBox.TopIndex = Math.Max(0, newIndex - 5);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error playing random track: {ex.Message}", "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
 
         private void PlayCurrentSelectedFile()
         {
@@ -459,7 +495,10 @@ namespace MusicLocalUI
         private string FormatTime(double seconds)
         {
             TimeSpan time = TimeSpan.FromSeconds(seconds);
-            return $"{time.Minutes:00}:{time.Seconds:00}";
+
+            return time.TotalHours >= 1
+                ? $"{(int)time.TotalHours:00}:{time.Minutes:00}:{time.Seconds:00}"
+                : $"{time.Minutes:00}:{time.Seconds:00}";
         }
         private void PlaybackProgressBar_MouseUp(object sender, MouseEventArgs e)
         {
@@ -492,7 +531,18 @@ namespace MusicLocalUI
                     // Проверяем завершение трека (с небольшим запасом)
                     if (totalDuration - currentPos < 0.5 && player.playState == WMPPlayState.wmppsPlaying)
                     {
-                        NextPlay_Click(null, null);
+                        if (orderSong)
+                        {
+                            NextPlay_Click(null, null);
+                        }
+                        else if (randomSong)
+                        {
+                            RandomPlay();
+                        }
+                        else if (repeatSong)
+                        {
+                            PlayCurrentSelectedFile();
+                        }
                     }
                 }
             }
@@ -516,7 +566,13 @@ namespace MusicLocalUI
                     metadata.Artist = file.Tag.FirstPerformer ?? "Unknown Artist";
                     metadata.Album = file.Tag.Album ?? "Unknown Album";
                     metadata.Genre = file.Tag.FirstGenre ?? "Unknown Genre";
-                    metadata.Duration = file.Properties.Duration.ToString(@"mm\:ss");
+
+                    // Форматируем длительность с часами, минутами и секундами
+                    TimeSpan duration = file.Properties.Duration;
+                    metadata.Duration = duration.TotalHours >= 1
+                        ? duration.ToString(@"hh\:mm\:ss")
+                        : duration.ToString(@"mm\:ss");
+
                     metadata.Bitrate = $"{file.Properties.AudioBitrate} kbps";
                 }
 
@@ -546,5 +602,59 @@ namespace MusicLocalUI
             return $"{len:0.##} {sizes[order]}";
         }
 
+        private void OrderBut_Click(object sender, EventArgs e)
+        {
+            orderSong = true;
+            randomSong = false;
+            repeatSong = false;
+            check_play_method();
+        }
+
+        private void RandomBut_Click(object sender, EventArgs e)
+        {
+            randomSong = true;
+            orderSong = false;
+            repeatSong = false;
+            check_play_method();
+        }
+
+        private void RepeatBut_Click(object sender, EventArgs e)
+        {
+            repeatSong = true;
+            orderSong = false;
+            randomSong = false;
+            check_play_method();
+        }
+
+        private void check_play_method()
+        {
+            if (orderSong)
+            {
+                OrderBut.BackColor = Color.Green;
+                OrderBut.ForeColor = Color.White;
+                RandomBut.BackColor = Color.LightGray;
+                RandomBut.ForeColor = Color.Black;
+                RepeatBut.BackColor = Color.LightGray;
+                RepeatBut.ForeColor = Color.Black;
+            }
+            else if (randomSong)
+            {
+                RandomBut.BackColor = Color.Green;
+                RandomBut.ForeColor = Color.White;
+                OrderBut.BackColor = Color.LightGray;
+                OrderBut.ForeColor = Color.Black;
+                RepeatBut.BackColor = Color.LightGray;
+                RepeatBut.ForeColor = Color.Black;
+            }
+            else if (repeatSong)
+            {
+                RepeatBut.BackColor = Color.Green;
+                RepeatBut.ForeColor = Color.White;
+                OrderBut.BackColor = Color.LightGray;
+                OrderBut.ForeColor = Color.Black;
+                RandomBut.BackColor = Color.LightGray;
+                RandomBut.ForeColor = Color.Black;
+            }
+        }
     }
 }
