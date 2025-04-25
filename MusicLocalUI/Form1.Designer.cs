@@ -34,6 +34,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.folderDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.OrderBut = new System.Windows.Forms.Button();
+            this.RandomBut = new System.Windows.Forms.Button();
+            this.RepeatBut = new System.Windows.Forms.Button();
             this.folderStatusLabel = new System.Windows.Forms.Label();
             this.scanningLabel = new System.Windows.Forms.Label();
             this.currentFileLabel = new System.Windows.Forms.Label();
@@ -63,12 +66,11 @@
             this.PreviousPlay = new System.Windows.Forms.Button();
             this.playbackProgressBar = new System.Windows.Forms.ProgressBar();
             this.timeLabel = new System.Windows.Forms.Label();
-            this.RepeatBut = new System.Windows.Forms.Button();
-            this.RandomBut = new System.Windows.Forms.Button();
-            this.OrderBut = new System.Windows.Forms.Button();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainApp_KeyDown);
             // 
             // musicListBox
             // 
@@ -123,6 +125,45 @@
             this.groupBox1.Size = new System.Drawing.Size(485, 430);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
+            // 
+            // OrderBut
+            // 
+            this.OrderBut.Enabled = false;
+            this.OrderBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.OrderBut.Location = new System.Drawing.Point(11, 179);
+            this.OrderBut.Name = "OrderBut";
+            this.OrderBut.Size = new System.Drawing.Size(73, 25);
+            this.OrderBut.TabIndex = 24;
+            this.OrderBut.Text = "Order";
+            this.OrderBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.OrderBut.UseVisualStyleBackColor = true;
+            this.OrderBut.Click += new System.EventHandler(this.OrderBut_Click);
+            // 
+            // RandomBut
+            // 
+            this.RandomBut.Enabled = false;
+            this.RandomBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RandomBut.Location = new System.Drawing.Point(90, 179);
+            this.RandomBut.Name = "RandomBut";
+            this.RandomBut.Size = new System.Drawing.Size(73, 25);
+            this.RandomBut.TabIndex = 23;
+            this.RandomBut.Text = "Random";
+            this.RandomBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.RandomBut.UseVisualStyleBackColor = true;
+            this.RandomBut.Click += new System.EventHandler(this.RandomBut_Click);
+            // 
+            // RepeatBut
+            // 
+            this.RepeatBut.Enabled = false;
+            this.RepeatBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RepeatBut.Location = new System.Drawing.Point(169, 179);
+            this.RepeatBut.Name = "RepeatBut";
+            this.RepeatBut.Size = new System.Drawing.Size(73, 25);
+            this.RepeatBut.TabIndex = 22;
+            this.RepeatBut.Text = "Repeat";
+            this.RepeatBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.RepeatBut.UseVisualStyleBackColor = true;
+            this.RepeatBut.Click += new System.EventHandler(this.RepeatBut_Click);
             // 
             // folderStatusLabel
             // 
@@ -357,7 +398,7 @@
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(166, 13);
             this.label7.TabIndex = 11;
-            this.label7.Text = "v0.3.0 Made by VL_PLAY Games";
+            this.label7.Text = "v0.4.0 Made by VL_PLAY Games";
             // 
             // NowPlaying
             // 
@@ -425,45 +466,6 @@
             this.timeLabel.TabIndex = 17;
             this.timeLabel.Text = "00:00:00 / 00:00:00";
             // 
-            // RepeatBut
-            // 
-            this.RepeatBut.Enabled = false;
-            this.RepeatBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RepeatBut.Location = new System.Drawing.Point(169, 179);
-            this.RepeatBut.Name = "RepeatBut";
-            this.RepeatBut.Size = new System.Drawing.Size(73, 25);
-            this.RepeatBut.TabIndex = 22;
-            this.RepeatBut.Text = "Repeat";
-            this.RepeatBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.RepeatBut.UseVisualStyleBackColor = true;
-            this.RepeatBut.Click += new System.EventHandler(this.RepeatBut_Click);
-            // 
-            // RandomBut
-            // 
-            this.RandomBut.Enabled = false;
-            this.RandomBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RandomBut.Location = new System.Drawing.Point(90, 179);
-            this.RandomBut.Name = "RandomBut";
-            this.RandomBut.Size = new System.Drawing.Size(73, 25);
-            this.RandomBut.TabIndex = 23;
-            this.RandomBut.Text = "Random";
-            this.RandomBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.RandomBut.UseVisualStyleBackColor = true;
-            this.RandomBut.Click += new System.EventHandler(this.RandomBut_Click);
-            // 
-            // OrderBut
-            // 
-            this.OrderBut.Enabled = false;
-            this.OrderBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.OrderBut.Location = new System.Drawing.Point(11, 179);
-            this.OrderBut.Name = "OrderBut";
-            this.OrderBut.Size = new System.Drawing.Size(73, 25);
-            this.OrderBut.TabIndex = 24;
-            this.OrderBut.Text = "Order";
-            this.OrderBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.OrderBut.UseVisualStyleBackColor = true;
-            this.OrderBut.Click += new System.EventHandler(this.OrderBut_Click);
-            // 
             // MainApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -481,7 +483,12 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.musicListBox);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.KeyPreview = true;
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(1000, 800);
+            this.MinimumSize = new System.Drawing.Size(1000, 800);
             this.Name = "MainApp";
             this.Text = "Music Local UI";
             this.groupBox1.ResumeLayout(false);
@@ -532,6 +539,7 @@
         private System.Windows.Forms.Button RepeatBut;
         private System.Windows.Forms.Button RandomBut;
         private System.Windows.Forms.Button OrderBut;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
     }
 }
 

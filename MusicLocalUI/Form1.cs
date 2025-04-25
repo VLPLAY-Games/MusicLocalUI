@@ -13,8 +13,6 @@ using WMPLib;
 
 namespace MusicLocalUI
 {
-
-
     public partial class MainApp : Form
     {
         private string path_to_music_folder = "";
@@ -30,6 +28,16 @@ namespace MusicLocalUI
         private bool orderSong = true;
         private bool repeatSong = false;
         private bool randomSong = false;
+
+
+        private void MainApp_KeyDown(object sender, KeyEventArgs e)
+        {
+            // нажата комбинация Ctrl + F
+            if (e.Control && e.KeyCode == Keys.F)
+            {
+                
+            }
+        }
 
         public class AudioMetadata
         {
