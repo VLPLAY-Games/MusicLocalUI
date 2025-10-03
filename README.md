@@ -1,5 +1,8 @@
 # Music Local UI
 
+- [Read in Russian](README.ru.md)
+- [Read in Japanese](README.ja.md)
+
 ![ui](https://github.com/user-attachments/assets/6aa030e0-b3b0-4f1d-99df-3f6403cb037d)
 
 
@@ -31,7 +34,7 @@ A lightweight Windows music player for local audio files (under 1MB size).
 3. Run `MusicLocalUI.exe`
 
 ### Included Files:
-- `MusicLocalUI.exe` (Main application, ~1MB)
+- `MusicLocalUI.exe` (Main application)
 - `TagLibSharp.dll` (Metadata library)
 
 ## How to Use
@@ -54,10 +57,6 @@ If the application doesn't run:
 1. Install [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472)
 2. Ensure both files are in the same folder
 3. Run as Administrator if needed
-
-## Version
-Current version: v0.3.0  
-Developed by VL_PLAY Games
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
