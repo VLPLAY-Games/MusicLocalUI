@@ -34,6 +34,14 @@
             this.label2 = new System.Windows.Forms.Label();
             this.folderDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.playbackControlPanel = new System.Windows.Forms.Panel();
+            this.favoriteButton = new System.Windows.Forms.Button();
+            this.historyForwardBtn = new System.Windows.Forms.Button();
+            this.historyBackBtn = new System.Windows.Forms.Button();
+            this.savePlaylistBtn = new System.Windows.Forms.Button();
+            this.loadPlaylistBtn = new System.Windows.Forms.Button();
+            this.showFavoritesButton = new System.Windows.Forms.Button();
+            this.RepeatAllBut = new System.Windows.Forms.Button();
             this.OrderBut = new System.Windows.Forms.Button();
             this.RandomBut = new System.Windows.Forms.Button();
             this.RepeatBut = new System.Windows.Forms.Button();
@@ -42,15 +50,13 @@
             this.currentFileLabel = new System.Windows.Forms.Label();
             this.scan_folder = new System.Windows.Forms.Button();
             this.scanProgressBar = new System.Windows.Forms.ProgressBar();
-            this.ChangeLangEN = new System.Windows.Forms.Button();
-            this.ChangeLangRU = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
             this.select_folder = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.path_to_folder = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.TrackYear = new System.Windows.Forms.Label();
             this.TrackArtist = new System.Windows.Forms.Label();
             this.TrackGenre = new System.Windows.Forms.Label();
             this.TrackAlbum = new System.Windows.Forms.Label();
@@ -74,9 +80,11 @@
             this.searchClearBtn = new System.Windows.Forms.Button();
             this.searchTextBox = new System.Windows.Forms.TextBox();
             this.volumePanel = new System.Windows.Forms.Panel();
+            this.muteButton = new System.Windows.Forms.Button();
             this.volumeLabel = new System.Windows.Forms.Label();
             this.volumeTrackBar = new System.Windows.Forms.TrackBar();
             this.groupBox1.SuspendLayout();
+            this.playbackControlPanel.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.searchPanel.SuspendLayout();
             this.volumePanel.SuspendLayout();
@@ -116,6 +124,11 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.playbackControlPanel);
+            this.groupBox1.Controls.Add(this.savePlaylistBtn);
+            this.groupBox1.Controls.Add(this.loadPlaylistBtn);
+            this.groupBox1.Controls.Add(this.showFavoritesButton);
+            this.groupBox1.Controls.Add(this.RepeatAllBut);
             this.groupBox1.Controls.Add(this.OrderBut);
             this.groupBox1.Controls.Add(this.RandomBut);
             this.groupBox1.Controls.Add(this.RepeatBut);
@@ -124,26 +137,113 @@
             this.groupBox1.Controls.Add(this.currentFileLabel);
             this.groupBox1.Controls.Add(this.scan_folder);
             this.groupBox1.Controls.Add(this.scanProgressBar);
-            this.groupBox1.Controls.Add(this.ChangeLangEN);
-            this.groupBox1.Controls.Add(this.ChangeLangRU);
-            this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.select_folder);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.path_to_folder);
             this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Location = new System.Drawing.Point(18, 296);
+            this.groupBox1.Location = new System.Drawing.Point(18, 323);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(485, 430);
+            this.groupBox1.Size = new System.Drawing.Size(485, 426);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
+            // 
+            // playbackControlPanel
+            // 
+            this.playbackControlPanel.Controls.Add(this.favoriteButton);
+            this.playbackControlPanel.Controls.Add(this.historyForwardBtn);
+            this.playbackControlPanel.Controls.Add(this.historyBackBtn);
+            this.playbackControlPanel.Location = new System.Drawing.Point(11, 386);
+            this.playbackControlPanel.Name = "playbackControlPanel";
+            this.playbackControlPanel.Size = new System.Drawing.Size(473, 37);
+            this.playbackControlPanel.TabIndex = 24;
+            // 
+            // favoriteButton
+            // 
+            this.favoriteButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.favoriteButton.Location = new System.Drawing.Point(161, 6);
+            this.favoriteButton.Name = "favoriteButton";
+            this.favoriteButton.Size = new System.Drawing.Size(73, 25);
+            this.favoriteButton.TabIndex = 2;
+            this.favoriteButton.Text = "♡ Favorite";
+            this.favoriteButton.UseVisualStyleBackColor = true;
+            this.favoriteButton.Click += new System.EventHandler(this.favoriteButton_Click);
+            // 
+            // historyForwardBtn
+            // 
+            this.historyForwardBtn.Enabled = false;
+            this.historyForwardBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.historyForwardBtn.Location = new System.Drawing.Point(82, 6);
+            this.historyForwardBtn.Name = "historyForwardBtn";
+            this.historyForwardBtn.Size = new System.Drawing.Size(73, 25);
+            this.historyForwardBtn.TabIndex = 1;
+            this.historyForwardBtn.Text = "Forward";
+            this.historyForwardBtn.UseVisualStyleBackColor = true;
+            this.historyForwardBtn.Click += new System.EventHandler(this.historyForwardBtn_Click);
+            // 
+            // historyBackBtn
+            // 
+            this.historyBackBtn.Enabled = false;
+            this.historyBackBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.historyBackBtn.Location = new System.Drawing.Point(3, 6);
+            this.historyBackBtn.Name = "historyBackBtn";
+            this.historyBackBtn.Size = new System.Drawing.Size(73, 25);
+            this.historyBackBtn.TabIndex = 0;
+            this.historyBackBtn.Text = "Back";
+            this.historyBackBtn.UseVisualStyleBackColor = true;
+            this.historyBackBtn.Click += new System.EventHandler(this.historyBackBtn_Click);
+            // 
+            // savePlaylistBtn
+            // 
+            this.savePlaylistBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.savePlaylistBtn.Location = new System.Drawing.Point(248, 335);
+            this.savePlaylistBtn.Name = "savePlaylistBtn";
+            this.savePlaylistBtn.Size = new System.Drawing.Size(110, 25);
+            this.savePlaylistBtn.TabIndex = 29;
+            this.savePlaylistBtn.Text = "Save Playlist";
+            this.savePlaylistBtn.UseVisualStyleBackColor = true;
+            this.savePlaylistBtn.Click += new System.EventHandler(this.SavePlaylist);
+            // 
+            // loadPlaylistBtn
+            // 
+            this.loadPlaylistBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.loadPlaylistBtn.Location = new System.Drawing.Point(132, 335);
+            this.loadPlaylistBtn.Name = "loadPlaylistBtn";
+            this.loadPlaylistBtn.Size = new System.Drawing.Size(110, 25);
+            this.loadPlaylistBtn.TabIndex = 28;
+            this.loadPlaylistBtn.Text = "Load Playlist";
+            this.loadPlaylistBtn.UseVisualStyleBackColor = true;
+            this.loadPlaylistBtn.Click += new System.EventHandler(this.LoadPlaylist);
+            // 
+            // showFavoritesButton
+            // 
+            this.showFavoritesButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.showFavoritesButton.Location = new System.Drawing.Point(9, 335);
+            this.showFavoritesButton.Name = "showFavoritesButton";
+            this.showFavoritesButton.Size = new System.Drawing.Size(117, 25);
+            this.showFavoritesButton.TabIndex = 27;
+            this.showFavoritesButton.Text = "Show Favorites";
+            this.showFavoritesButton.UseVisualStyleBackColor = true;
+            this.showFavoritesButton.Click += new System.EventHandler(this.showFavoritesButton_Click);
+            // 
+            // RepeatAllBut
+            // 
+            this.RepeatAllBut.Enabled = false;
+            this.RepeatAllBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RepeatAllBut.Location = new System.Drawing.Point(248, 275);
+            this.RepeatAllBut.Name = "RepeatAllBut";
+            this.RepeatAllBut.Size = new System.Drawing.Size(91, 25);
+            this.RepeatAllBut.TabIndex = 26;
+            this.RepeatAllBut.Text = "Repeat All";
+            this.RepeatAllBut.UseVisualStyleBackColor = true;
+            this.RepeatAllBut.Click += new System.EventHandler(this.RepeatAllBut_Click);
             // 
             // OrderBut
             // 
             this.OrderBut.Enabled = false;
             this.OrderBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.OrderBut.Location = new System.Drawing.Point(11, 179);
+            this.OrderBut.Location = new System.Drawing.Point(9, 275);
             this.OrderBut.Name = "OrderBut";
-            this.OrderBut.Size = new System.Drawing.Size(73, 25);
+            this.OrderBut.Size = new System.Drawing.Size(75, 25);
             this.OrderBut.TabIndex = 24;
             this.OrderBut.Text = "Order";
             this.OrderBut.TextAlign = System.Drawing.ContentAlignment.TopCenter;
@@ -154,7 +254,7 @@
             // 
             this.RandomBut.Enabled = false;
             this.RandomBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RandomBut.Location = new System.Drawing.Point(90, 179);
+            this.RandomBut.Location = new System.Drawing.Point(90, 275);
             this.RandomBut.Name = "RandomBut";
             this.RandomBut.Size = new System.Drawing.Size(73, 25);
             this.RandomBut.TabIndex = 23;
@@ -167,7 +267,7 @@
             // 
             this.RepeatBut.Enabled = false;
             this.RepeatBut.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RepeatBut.Location = new System.Drawing.Point(169, 179);
+            this.RepeatBut.Location = new System.Drawing.Point(169, 275);
             this.RepeatBut.Name = "RepeatBut";
             this.RepeatBut.Size = new System.Drawing.Size(73, 25);
             this.RepeatBut.TabIndex = 22;
@@ -190,7 +290,7 @@
             // 
             this.scanningLabel.AutoSize = true;
             this.scanningLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.scanningLabel.Location = new System.Drawing.Point(8, 362);
+            this.scanningLabel.Location = new System.Drawing.Point(8, 196);
             this.scanningLabel.Name = "scanningLabel";
             this.scanningLabel.Size = new System.Drawing.Size(71, 17);
             this.scanningLabel.TabIndex = 15;
@@ -201,7 +301,7 @@
             // 
             this.currentFileLabel.AutoSize = true;
             this.currentFileLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.currentFileLabel.Location = new System.Drawing.Point(6, 379);
+            this.currentFileLabel.Location = new System.Drawing.Point(6, 213);
             this.currentFileLabel.Name = "currentFileLabel";
             this.currentFileLabel.Size = new System.Drawing.Size(0, 17);
             this.currentFileLabel.TabIndex = 14;
@@ -209,7 +309,7 @@
             // scan_folder
             // 
             this.scan_folder.Enabled = false;
-            this.scan_folder.Location = new System.Drawing.Point(11, 307);
+            this.scan_folder.Location = new System.Drawing.Point(11, 141);
             this.scan_folder.Name = "scan_folder";
             this.scan_folder.Size = new System.Drawing.Size(75, 23);
             this.scan_folder.TabIndex = 12;
@@ -219,42 +319,12 @@
             // 
             // scanProgressBar
             // 
-            this.scanProgressBar.Location = new System.Drawing.Point(11, 336);
+            this.scanProgressBar.Location = new System.Drawing.Point(11, 170);
             this.scanProgressBar.Name = "scanProgressBar";
             this.scanProgressBar.Size = new System.Drawing.Size(446, 23);
             this.scanProgressBar.Step = 1;
             this.scanProgressBar.TabIndex = 11;
             this.scanProgressBar.Visible = false;
-            // 
-            // ChangeLangEN
-            // 
-            this.ChangeLangEN.Enabled = false;
-            this.ChangeLangEN.Location = new System.Drawing.Point(410, 17);
-            this.ChangeLangEN.Name = "ChangeLangEN";
-            this.ChangeLangEN.Size = new System.Drawing.Size(47, 23);
-            this.ChangeLangEN.TabIndex = 10;
-            this.ChangeLangEN.Text = "EN";
-            this.ChangeLangEN.UseVisualStyleBackColor = true;
-            // 
-            // ChangeLangRU
-            // 
-            this.ChangeLangRU.Enabled = false;
-            this.ChangeLangRU.Location = new System.Drawing.Point(357, 17);
-            this.ChangeLangRU.Name = "ChangeLangRU";
-            this.ChangeLangRU.Size = new System.Drawing.Size(47, 23);
-            this.ChangeLangRU.TabIndex = 9;
-            this.ChangeLangRU.Text = "RU";
-            this.ChangeLangRU.UseVisualStyleBackColor = true;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(256, 16);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(95, 24);
-            this.label6.TabIndex = 8;
-            this.label6.Text = "Language";
             // 
             // select_folder
             // 
@@ -306,6 +376,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.TrackYear);
             this.groupBox2.Controls.Add(this.TrackArtist);
             this.groupBox2.Controls.Add(this.TrackGenre);
             this.groupBox2.Controls.Add(this.TrackAlbum);
@@ -320,9 +391,19 @@
             this.groupBox2.Controls.Add(this.TotalFiles);
             this.groupBox2.Location = new System.Drawing.Point(18, 48);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(485, 242);
+            this.groupBox2.Size = new System.Drawing.Size(485, 258);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
+            // 
+            // TrackYear
+            // 
+            this.TrackYear.AutoSize = true;
+            this.TrackYear.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackYear.Location = new System.Drawing.Point(256, 230);
+            this.TrackYear.Name = "TrackYear";
+            this.TrackYear.Size = new System.Drawing.Size(47, 20);
+            this.TrackYear.TabIndex = 23;
+            this.TrackYear.Text = "Year:";
             // 
             // TrackArtist
             // 
@@ -330,7 +411,7 @@
             this.TrackArtist.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TrackArtist.Location = new System.Drawing.Point(256, 201);
             this.TrackArtist.Name = "TrackArtist";
-            this.TrackArtist.Size = new System.Drawing.Size(48, 20);
+            this.TrackArtist.Size = new System.Drawing.Size(50, 20);
             this.TrackArtist.TabIndex = 22;
             this.TrackArtist.Text = "Artist:";
             // 
@@ -350,7 +431,7 @@
             this.TrackAlbum.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TrackAlbum.Location = new System.Drawing.Point(256, 143);
             this.TrackAlbum.Name = "TrackAlbum";
-            this.TrackAlbum.Size = new System.Drawing.Size(61, 20);
+            this.TrackAlbum.Size = new System.Drawing.Size(58, 20);
             this.TrackAlbum.TabIndex = 20;
             this.TrackAlbum.Text = "Album:";
             // 
@@ -378,7 +459,7 @@
             // 
             this.TrackExtension.AutoSize = true;
             this.TrackExtension.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackExtension.Location = new System.Drawing.Point(256, 58);
+            this.TrackExtension.Location = new System.Drawing.Point(361, 201);
             this.TrackExtension.Name = "TrackExtension";
             this.TrackExtension.Size = new System.Drawing.Size(83, 20);
             this.TrackExtension.TabIndex = 17;
@@ -388,7 +469,7 @@
             // 
             this.TrackBitRate.AutoSize = true;
             this.TrackBitRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackBitRate.Location = new System.Drawing.Point(256, 85);
+            this.TrackBitRate.Location = new System.Drawing.Point(361, 230);
             this.TrackBitRate.Name = "TrackBitRate";
             this.TrackBitRate.Size = new System.Drawing.Size(64, 20);
             this.TrackBitRate.TabIndex = 16;
@@ -543,12 +624,24 @@
             // 
             // volumePanel
             // 
+            this.volumePanel.Controls.Add(this.muteButton);
             this.volumePanel.Controls.Add(this.volumeLabel);
             this.volumePanel.Controls.Add(this.volumeTrackBar);
             this.volumePanel.Location = new System.Drawing.Point(509, 701);
             this.volumePanel.Name = "volumePanel";
             this.volumePanel.Size = new System.Drawing.Size(115, 60);
             this.volumePanel.TabIndex = 23;
+            // 
+            // muteButton
+            // 
+            this.muteButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.muteButton.Location = new System.Drawing.Point(84, 3);
+            this.muteButton.Name = "muteButton";
+            this.muteButton.Size = new System.Drawing.Size(25, 20);
+            this.muteButton.TabIndex = 2;
+            this.muteButton.Text = "🔊";
+            this.muteButton.UseVisualStyleBackColor = true;
+            this.muteButton.Click += new System.EventHandler(this.ToggleMute);
             // 
             // volumeLabel
             // 
@@ -603,6 +696,7 @@
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.MainApp_DragEnter);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.playbackControlPanel.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.searchPanel.ResumeLayout(false);
@@ -628,9 +722,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button select_folder;
-        private System.Windows.Forms.Button ChangeLangEN;
-        private System.Windows.Forms.Button ChangeLangRU;
-        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ProgressBar scanProgressBar;
         private System.Windows.Forms.Label label8;
@@ -664,5 +755,15 @@
         private System.Windows.Forms.Panel volumePanel;
         private System.Windows.Forms.TrackBar volumeTrackBar;
         private System.Windows.Forms.Label volumeLabel;
+        private System.Windows.Forms.Button RepeatAllBut;
+        private System.Windows.Forms.Button showFavoritesButton;
+        private System.Windows.Forms.Button loadPlaylistBtn;
+        private System.Windows.Forms.Button savePlaylistBtn;
+        private System.Windows.Forms.Panel playbackControlPanel;
+        private System.Windows.Forms.Button historyBackBtn;
+        private System.Windows.Forms.Button historyForwardBtn;
+        private System.Windows.Forms.Button favoriteButton;
+        private System.Windows.Forms.Button muteButton;
+        private System.Windows.Forms.Label TrackYear;
     }
 }

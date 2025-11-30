@@ -5,11 +5,12 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Media;
 using WMPLib;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace MusicLocalUI
 {
@@ -21,6 +22,9 @@ namespace MusicLocalUI
         private int totalDurationSeconds = 0;
         private List<string> audioFilesList = new List<string>();
         private List<string> filteredAudioFilesList = new List<string>();
+        private List<string> favoriteTracks = new List<string>();
+        private List<string> playHistory = new List<string>();
+        private int currentHistoryIndex = -1;
         private WindowsMediaPlayer player = new WindowsMediaPlayer();
         private Timer playbackTimer;
         private bool isUserSeeking = false;
@@ -28,7 +32,9 @@ namespace MusicLocalUI
         private bool orderSong = true;
         private bool repeatSong = false;
         private bool randomSong = false;
+        private bool repeatAll = false;
         private bool isSearchActive = false;
+        private string currentPlaylist = "";
 
         public class AudioMetadata
         {
@@ -41,6 +47,7 @@ namespace MusicLocalUI
             public string CreatedDate { get; set; }
             public string Album { get; set; }
             public string Genre { get; set; }
+            public string Year { get; set; }
         }
 
         public MainApp()
@@ -59,14 +66,11 @@ namespace MusicLocalUI
             {
                 if (newState == (int)WMPPlayState.wmppsMediaEnded)
                 {
-                    // Вызываем в UI-потоке
                     this.Invoke((MethodInvoker)delegate
                     {
                         NextPlay_Click(null, null);
                     });
                 }
-
-                // Обновляем время при любом изменении состояния
                 this.Invoke((MethodInvoker)UpdateTimeDisplay);
             };
 
@@ -78,6 +82,9 @@ namespace MusicLocalUI
             // Настройка горячих клавиш
             this.KeyPreview = true;
             this.KeyDown += MainApp_KeyDown;
+
+            // Загрузка настроек
+            LoadSettings();
         }
 
         private void MainApp_KeyDown(object sender, KeyEventArgs e)
@@ -90,10 +97,12 @@ namespace MusicLocalUI
                     break;
                 case Keys.Right:
                     if (e.Control) NextPlay_Click(null, null);
+                    else if (e.Shift) SeekForward();
                     e.Handled = true;
                     break;
                 case Keys.Left:
                     if (e.Control) PreviousPlay_Click(null, null);
+                    else if (e.Shift) SeekBackward();
                     e.Handled = true;
                     break;
                 case Keys.F5:
@@ -108,9 +117,50 @@ namespace MusicLocalUI
                     }
                     e.Handled = true;
                     break;
+                case Keys.F:
+                    if (e.Control) searchTextBox.Focus();
+                    e.Handled = true;
+                    break;
+                case Keys.M:
+                    if (e.Control) ToggleMute(null, null);
+                    e.Handled = true;
+                    break;
+                case Keys.L:
+                    if (e.Control) LoadPlaylist(null, null);
+                    e.Handled = true;
+                    break;
+                case Keys.S:
+                    if (e.Control) SavePlaylist(null, null);
+                    e.Handled = true;
+                    break;
             }
         }
 
+        private void SeekForward()
+        {
+            if (player.currentMedia != null)
+            {
+                double currentPos = player.controls.currentPosition;
+                player.controls.currentPosition = Math.Min(currentPos + 10, player.currentMedia.duration);
+            }
+        }
+
+        private void SeekBackward()
+        {
+            if (player.currentMedia != null)
+            {
+                double currentPos = player.controls.currentPosition;
+                player.controls.currentPosition = Math.Max(currentPos - 10, 0);
+            }
+        }
+
+        private void ToggleMute(object sender, EventArgs e)
+        {
+            player.settings.mute = !player.settings.mute;
+            muteButton.Text = player.settings.mute ? "🔇" : "🔊";
+        }
+
+        // ПОИСК
         private void SearchTextBox_TextChanged(object sender, EventArgs e)
         {
             if (searchTextBox.Text == "Search..." || string.IsNullOrWhiteSpace(searchTextBox.Text))
@@ -154,7 +204,8 @@ namespace MusicLocalUI
             {
                 string file = displayList[i];
                 var (duration, durationString) = GetAudioFileInfo(file);
-                musicListBox.Items.Add($"{Path.GetFileNameWithoutExtension(file)}|||Duration: {durationString}");
+                string favoriteIndicator = favoriteTracks.Contains(file) ? "❤ " : "";
+                musicListBox.Items.Add($"{favoriteIndicator}{Path.GetFileNameWithoutExtension(file)}|||Duration: {durationString}");
             }
 
             musicListBox.EndUpdate();
@@ -168,9 +219,9 @@ namespace MusicLocalUI
             searchClearBtn.Visible = false;
         }
 
+        // СКАНИРОВАНИЕ ПАПКИ
         private async void scan_folder_Click(object sender, EventArgs e)
         {
-            // Проверка выбранной папки
             if (string.IsNullOrEmpty(path_to_music_folder) || !Directory.Exists(path_to_music_folder))
             {
                 MessageBox.Show(!Directory.Exists(path_to_music_folder)
@@ -182,10 +233,8 @@ namespace MusicLocalUI
 
             try
             {
-                // Настройка UI перед сканированием
                 SetupUIForScanning();
 
-                // Получаем и фильтруем аудиофайлы
                 audioFilesList = Directory.GetFiles(path_to_music_folder, "*.*", SearchOption.AllDirectories)
                     .Where(file => audioExtensions.Contains(Path.GetExtension(file).ToLower()))
                     .ToList();
@@ -193,19 +242,17 @@ namespace MusicLocalUI
                 filteredAudioFilesList.Clear();
                 filteredAudioFilesList.AddRange(audioFilesList);
 
-                // Настройка элементов управления
                 scanProgressBar.Maximum = audioFilesList.Count;
                 SetupListBox();
 
-                // Обработка файлов
                 await ProcessAudioFilesAsync();
 
-                // Обновление статуса
                 UpdateStatusLabel();
 
                 OrderBut.Enabled = true;
                 RandomBut.Enabled = true;
                 RepeatBut.Enabled = true;
+                RepeatAllBut.Enabled = true;
 
                 check_play_method();
 
@@ -252,16 +299,16 @@ namespace MusicLocalUI
 
                 UpdateProgressUI(file, i);
 
-                // Получаем информацию о файле
                 var (duration, durationString) = GetAudioFileInfo(file);
                 totalDurationSeconds += duration;
 
                 if (!isSearchActive || filteredAudioFilesList.Contains(file))
                 {
-                    musicListBox.Items.Add($"{Path.GetFileNameWithoutExtension(file)}|||Duration: {durationString}");
+                    string favoriteIndicator = favoriteTracks.Contains(file) ? "❤ " : "";
+                    musicListBox.Items.Add($"{favoriteIndicator}{Path.GetFileNameWithoutExtension(file)}|||Duration: {durationString}");
                 }
 
-                if (i % 5 == 0) await Task.Delay(1); // Периодическое освобождение потока
+                if (i % 5 == 0) await Task.Delay(1);
             }
         }
 
@@ -315,34 +362,31 @@ namespace MusicLocalUI
             musicListBox.Visible = true;
         }
 
+        // ОТРИСОВКА СПИСКА МУЗЫКИ
         private void DrawMusicListItem(object sender, DrawItemEventArgs e)
         {
             if (e.Index < 0) return;
 
             e.DrawBackground();
 
-            // Подготовка данных
             var itemText = musicListBox.Items[e.Index]?.ToString() ?? "";
             var parts = itemText.Split(new[] { "|||" }, StringSplitOptions.None);
             var title = parts.Length > 0 ? parts[0] : "";
             var duration = parts.Length > 1 ? parts[1] : "";
 
-            // Определение стилей
             bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
             var bgColor = isSelected ? Color.FromArgb(51, 153, 255) :
                 (e.Index % 2 == 0 ? Color.White : Color.FromArgb(245, 245, 245));
             var textColor = isSelected ? Color.White : Color.Black;
 
-            // Отрисовка
             using (var bgBrush = new SolidBrush(bgColor))
             {
                 e.Graphics.FillRectangle(bgBrush, e.Bounds);
             }
 
-            // Разделительная линия
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.Left, e.Bounds.Top, e.Bounds.Right, e.Bounds.Top);
 
-            // Название трека
+            // Название трека (с сердечком для избранных)
             var titleRect = new Rectangle(e.Bounds.X + 15, e.Bounds.Y + 5, e.Bounds.Width - 30, e.Bounds.Height / 2);
             TextRenderer.DrawText(e.Graphics, title, new Font(e.Font, FontStyle.Bold),
                                  titleRect, textColor, TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
@@ -354,6 +398,630 @@ namespace MusicLocalUI
                                  textColor, TextFormatFlags.Left);
 
             if (isSelected) e.DrawFocusRectangle();
+        }
+
+        // ВОСПРОИЗВЕДЕНИЕ
+        private void musicListBox_DoubleClick(object sender, EventArgs e)
+        {
+            if (musicListBox.SelectedIndex < 0) return;
+
+            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+
+            if (musicListBox.SelectedIndex >= displayList.Count)
+                return;
+
+            try
+            {
+                string filePath = displayList[musicListBox.SelectedIndex];
+
+                if (File.Exists(filePath))
+                {
+                    PreviousPlay.Enabled = true;
+                    NextPlay.Enabled = true;
+                    StartPausePlay.Enabled = true;
+                    StartPausePlay.Text = "⏸";
+                    AddToHistory(filePath);
+                    PlayAudioFile(filePath);
+                }
+                else
+                {
+                    MessageBox.Show("Audio file not found!", "Error",
+                                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    audioFilesList.Remove(filePath);
+                    filteredAudioFilesList.Remove(filePath);
+                    UpdateMusicListBox();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Playback Error",
+                               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void PlayAudioFile(string filePath)
+        {
+            try
+            {
+                player.controls.stop();
+                player.URL = filePath;
+                player.controls.play();
+
+                playbackProgressBar.Value = 0;
+                playbackTimer.Start();
+
+                var metadata = GetAudioMetadata(filePath);
+
+                TrackDuration.Text = "Duration: " + metadata.Duration;
+                TrackBitRate.Text = "Bit rate: " + metadata.Bitrate;
+                TrackExtension.Text = "Extension: " + metadata.FileExtension;
+                TrackSize.Text = "Size: " + metadata.FileSize;
+                TrackCreated.Text = "Created: " + metadata.CreatedDate;
+                TrackAlbum.Text = "Album: " + metadata.Album;
+                TrackGenre.Text = "Genre: " + metadata.Genre;
+                TrackArtist.Text = "Artist: " + metadata.Artist;
+                TrackYear.Text = "Year: " + metadata.Year;
+
+                string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
+                NowPlaying.Text = MusicName.Length > 65
+                    ? MusicName.Insert(63, Environment.NewLine + "                     ")
+                    : MusicName;
+
+                // Обновляем кнопку избранного
+                UpdateFavoriteButton(filePath);
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error playing file: {ex.Message}", "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void AddToHistory(string filePath)
+        {
+            // Удаляем все элементы после текущего индекса
+            if (currentHistoryIndex < playHistory.Count - 1)
+            {
+                playHistory.RemoveRange(currentHistoryIndex + 1, playHistory.Count - currentHistoryIndex - 1);
+            }
+
+            playHistory.Add(filePath);
+            currentHistoryIndex = playHistory.Count - 1;
+
+            UpdateHistoryButtons();
+        }
+
+        private void UpdateHistoryButtons()
+        {
+            historyBackBtn.Enabled = currentHistoryIndex > 0;
+            historyForwardBtn.Enabled = currentHistoryIndex < playHistory.Count - 1;
+        }
+
+        // УПРАВЛЕНИЕ ВОСПРОИЗВЕДЕНИЕМ
+        private void PreviousPlay_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+                if (displayList.Count == 0) return;
+
+                int currentIndex = musicListBox.SelectedIndex;
+                int newIndex = currentIndex <= 0 ? displayList.Count - 1 : currentIndex - 1;
+
+                musicListBox.SelectedIndex = newIndex;
+                PlayCurrentSelectedFile();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error playing previous track: {ex.Message}", "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void StartPausePlay_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (player.playState == WMPPlayState.wmppsPlaying)
+                {
+                    player.controls.pause();
+                    StartPausePlay.Text = "▶";
+                    playbackTimer.Stop();
+                }
+                else
+                {
+                    if (player.playState == WMPPlayState.wmppsPaused)
+                    {
+                        player.controls.play();
+                    }
+                    else if (musicListBox.SelectedIndex >= 0)
+                    {
+                        PlayCurrentSelectedFile();
+                    }
+                    else if (audioFilesList.Count > 0)
+                    {
+                        musicListBox.SelectedIndex = 0;
+                        PlayCurrentSelectedFile();
+                    }
+                    playbackTimer.Start();
+                    StartPausePlay.Text = "⏸";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error controlling playback: {ex.Message}", "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void NextPlay_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+                if (displayList.Count == 0) return;
+
+                int newIndex;
+                if (musicListBox.SelectedIndex < 0)
+                {
+                    newIndex = 0;
+                }
+                else
+                {
+                    if (repeatSong)
+                    {
+                        newIndex = musicListBox.SelectedIndex;
+                    }
+                    else if (repeatAll && musicListBox.SelectedIndex == displayList.Count - 1)
+                    {
+                        newIndex = 0;
+                    }
+                    else
+                    {
+                        newIndex = (musicListBox.SelectedIndex + 1) % displayList.Count;
+                    }
+                }
+
+                musicListBox.SelectedIndex = newIndex;
+                PlayCurrentSelectedFile();
+
+                musicListBox.TopIndex = Math.Max(0, newIndex - 5);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error playing next track: {ex.Message}", "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void RandomPlay()
+        {
+            try
+            {
+                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+                if (displayList.Count == 0) return;
+
+                int newIndex;
+                Random rnd = new Random();
+                newIndex = rnd.Next(displayList.Count);
+
+                musicListBox.SelectedIndex = newIndex;
+                PlayCurrentSelectedFile();
+
+                musicListBox.TopIndex = Math.Max(0, newIndex - 5);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error playing random track: {ex.Message}", "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void PlayCurrentSelectedFile()
+        {
+            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+
+            if (musicListBox.SelectedIndex < 0 || musicListBox.SelectedIndex >= displayList.Count)
+                return;
+
+            string filePath = displayList[musicListBox.SelectedIndex];
+            if (File.Exists(filePath))
+            {
+                AddToHistory(filePath);
+                PlayAudioFile(filePath);
+                StartPausePlay.Text = "⏸";
+            }
+            else
+            {
+                MessageBox.Show("File not found: " + Path.GetFileName(filePath), "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        // ПРОГРЕСС ВОСПРОИЗВЕДЕНИЯ
+        private void PlaybackTimer_Tick(object sender, EventArgs e)
+        {
+            UpdateTimeDisplay();
+        }
+
+        private string FormatTime(double seconds)
+        {
+            TimeSpan time = TimeSpan.FromSeconds(seconds);
+
+            return time.TotalHours >= 1
+                ? $"{(int)time.TotalHours:00}:{time.Minutes:00}:{time.Seconds:00}"
+                : $"{time.Minutes:00}:{time.Seconds:00}";
+        }
+
+        private void PlaybackProgressBar_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (player.currentMedia != null)
+            {
+                double newPosition = (double)e.X / playbackProgressBar.Width * player.currentMedia.duration;
+                player.controls.currentPosition = newPosition;
+
+                playbackProgressBar.Value = (int)newPosition;
+                isUserSeeking = false;
+            }
+        }
+
+        private void UpdateTimeDisplay()
+        {
+            try
+            {
+                if (player.currentMedia != null)
+                {
+                    double currentPos = player.controls.currentPosition;
+                    double totalDuration = player.currentMedia.duration;
+
+                    playbackProgressBar.Maximum = (int)totalDuration;
+                    playbackProgressBar.Value = (int)currentPos;
+
+                    timeLabel.Text = $"{FormatTime(currentPos)} / {FormatTime(totalDuration)}";
+
+                    if (totalDuration - currentPos < 0.5 && player.playState == WMPPlayState.wmppsPlaying)
+                    {
+                        if (orderSong)
+                        {
+                            NextPlay_Click(null, null);
+                        }
+                        else if (randomSong)
+                        {
+                            RandomPlay();
+                        }
+                        else if (repeatSong)
+                        {
+                            PlayCurrentSelectedFile();
+                        }
+                        else if (repeatAll)
+                        {
+                            NextPlay_Click(null, null);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Игнорируем ошибки обновления UI
+            }
+        }
+
+        // МЕТАДАННЫЕ
+        public AudioMetadata GetAudioMetadata(string filePath)
+        {
+            var metadata = new AudioMetadata();
+            var fileInfo = new FileInfo(filePath);
+
+            try
+            {
+                using (var file = TagLib.File.Create(filePath))
+                {
+                    metadata.Title = file.Tag.Title ?? Path.GetFileNameWithoutExtension(filePath);
+                    metadata.Artist = file.Tag.FirstPerformer ?? "Unknown";
+                    metadata.Album = file.Tag.Album ?? "Unknown";
+                    metadata.Genre = file.Tag.FirstGenre ?? "Unknown";
+                    metadata.Year = file.Tag.Year > 0 ? file.Tag.Year.ToString() : "Unknown";
+
+                    TimeSpan duration = file.Properties.Duration;
+                    metadata.Duration = duration.TotalHours >= 1
+                        ? duration.ToString(@"hh\:mm\:ss")
+                        : duration.ToString(@"mm\:ss");
+
+                    metadata.Bitrate = $"{file.Properties.AudioBitrate} kbps";
+                }
+
+                metadata.FileExtension = fileInfo.Extension.ToUpper().TrimStart('.');
+                metadata.FileSize = FormatFileSize(fileInfo.Length);
+                metadata.CreatedDate = fileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading metadata: {ex.Message}");
+            }
+
+            return metadata;
+        }
+
+        private string FormatFileSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB" };
+            int order = 0;
+            double len = bytes;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len /= 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
+        }
+
+        // РЕЖИМЫ ВОСПРОИЗВЕДЕНИЯ
+        private void OrderBut_Click(object sender, EventArgs e)
+        {
+            orderSong = true;
+            randomSong = false;
+            repeatSong = false;
+            repeatAll = false;
+            check_play_method();
+        }
+
+        private void RandomBut_Click(object sender, EventArgs e)
+        {
+            randomSong = true;
+            orderSong = false;
+            repeatSong = false;
+            repeatAll = false;
+            check_play_method();
+        }
+
+        private void RepeatBut_Click(object sender, EventArgs e)
+        {
+            repeatSong = true;
+            orderSong = false;
+            randomSong = false;
+            repeatAll = false;
+            check_play_method();
+        }
+
+        private void RepeatAllBut_Click(object sender, EventArgs e)
+        {
+            repeatAll = true;
+            orderSong = false;
+            randomSong = false;
+            repeatSong = false;
+            check_play_method();
+        }
+
+        private void check_play_method()
+        {
+            OrderBut.BackColor = orderSong ? Color.Green : Color.LightGray;
+            OrderBut.ForeColor = orderSong ? Color.White : Color.Black;
+
+            RandomBut.BackColor = randomSong ? Color.Green : Color.LightGray;
+            RandomBut.ForeColor = randomSong ? Color.White : Color.Black;
+
+            RepeatBut.BackColor = repeatSong ? Color.Green : Color.LightGray;
+            RepeatBut.ForeColor = repeatSong ? Color.White : Color.Black;
+
+            RepeatAllBut.BackColor = repeatAll ? Color.Green : Color.LightGray;
+            RepeatAllBut.ForeColor = repeatAll ? Color.White : Color.Black;
+        }
+
+        // ГРОМКОСТЬ
+        private void volumeTrackBar_Scroll(object sender, EventArgs e)
+        {
+            player.settings.volume = volumeTrackBar.Value;
+            volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
+        }
+
+        // ИСТОРИЯ ВОСПРОИЗВЕДЕНИЯ
+        private void historyBackBtn_Click(object sender, EventArgs e)
+        {
+            if (currentHistoryIndex > 0)
+            {
+                currentHistoryIndex--;
+                string filePath = playHistory[currentHistoryIndex];
+                PlayAudioFile(filePath);
+                UpdateHistoryButtons();
+            }
+        }
+
+        private void historyForwardBtn_Click(object sender, EventArgs e)
+        {
+            if (currentHistoryIndex < playHistory.Count - 1)
+            {
+                currentHistoryIndex++;
+                string filePath = playHistory[currentHistoryIndex];
+                PlayAudioFile(filePath);
+                UpdateHistoryButtons();
+            }
+        }
+
+        // ИЗБРАННОЕ
+        private void favoriteButton_Click(object sender, EventArgs e)
+        {
+            if (musicListBox.SelectedIndex >= 0)
+            {
+                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+                string filePath = displayList[musicListBox.SelectedIndex];
+
+                if (favoriteTracks.Contains(filePath))
+                {
+                    favoriteTracks.Remove(filePath);
+                }
+                else
+                {
+                    favoriteTracks.Add(filePath);
+                }
+
+                UpdateMusicListBox();
+                UpdateFavoriteButton(filePath);
+                SaveFavorites();
+            }
+        }
+
+        private void UpdateFavoriteButton(string filePath)
+        {
+            favoriteButton.Text = favoriteTracks.Contains(filePath) ? "❤ Remove Favorite" : "♡ Add Favorite";
+        }
+
+        private void showFavoritesButton_Click(object sender, EventArgs e)
+        {
+            if (showFavoritesButton.Text == "Show Favorites")
+            {
+                filteredAudioFilesList.Clear();
+                filteredAudioFilesList.AddRange(favoriteTracks);
+                isSearchActive = true;
+                UpdateMusicListBox();
+                showFavoritesButton.Text = "Show All";
+            }
+            else
+            {
+                filteredAudioFilesList.Clear();
+                filteredAudioFilesList.AddRange(audioFilesList);
+                isSearchActive = false;
+                UpdateMusicListBox();
+                showFavoritesButton.Text = "Show Favorites";
+            }
+        }
+
+        // ПЛЕЙЛИСТЫ
+        private void SavePlaylist(object sender, EventArgs e)
+        {
+            if (audioFilesList.Count == 0) return;
+
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "Playlist files (*.m3u)|*.m3u|All files (*.*)|*.*";
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    File.WriteAllLines(saveDialog.FileName, audioFilesList);
+                    currentPlaylist = saveDialog.FileName;
+                    MessageBox.Show("Playlist saved successfully!", "Success",
+                                  MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving playlist: {ex.Message}", "Error",
+                                  MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void LoadPlaylist(object sender, EventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog();
+            openDialog.Filter = "Playlist files (*.m3u)|*.m3u|All files (*.*)|*.*";
+            if (openDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    audioFilesList = File.ReadAllLines(openDialog.FileName).ToList();
+                    filteredAudioFilesList.Clear();
+                    filteredAudioFilesList.AddRange(audioFilesList);
+                    currentPlaylist = openDialog.FileName;
+                    UpdateMusicListBox();
+                    MessageBox.Show("Playlist loaded successfully!", "Success",
+                                  MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading playlist: {ex.Message}", "Error",
+                                  MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+
+
+        // НАСТРОЙКИ
+        private void SaveSettings()
+        {
+            try
+            {
+                var settings = new Dictionary<string, string>
+                {
+                    ["Volume"] = volumeTrackBar.Value.ToString(),
+                    ["LastFolder"] = path_to_music_folder,
+                    ["Favorites"] = string.Join("|", favoriteTracks)
+                };
+
+                File.WriteAllLines("settings.ini", settings.Select(x => $"{x.Key}={x.Value}"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving settings: {ex.Message}");
+            }
+        }
+
+        private void LoadSettings()
+        {
+            try
+            {
+                if (File.Exists("settings.ini"))
+                {
+                    var settings = File.ReadAllLines("settings.ini")
+                        .Select(line => line.Split('='))
+                        .Where(parts => parts.Length == 2)
+                        .ToDictionary(parts => parts[0], parts => parts[1]);
+
+                    if (settings.ContainsKey("Volume"))
+                        volumeTrackBar.Value = int.Parse(settings["Volume"]);
+
+                    if (settings.ContainsKey("LastFolder"))
+                        path_to_folder.Text = settings["LastFolder"];
+
+                    if (settings.ContainsKey("Favorites"))
+                        favoriteTracks = settings["Favorites"].Split('|').Where(f => !string.IsNullOrEmpty(f)).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading settings: {ex.Message}");
+            }
+        }
+
+        // СИСТЕМНЫЕ ФУНКЦИИ
+        private void MainApp_Load(object sender, EventArgs e)
+        {
+            volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
+            this.AllowDrop = true;
+            this.DragEnter += MainApp_DragEnter;
+            this.DragDrop += MainApp_DragDrop;
+        }
+
+        private void MainApp_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private void MainApp_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files.Length > 0)
+            {
+                if (Directory.Exists(files[0]))
+                {
+                    path_to_music_folder = files[0];
+                    path_to_folder.Text = path_to_music_folder;
+                    scan_folder_Click(null, null);
+                }
+                else if (File.Exists(files[0]) && audioExtensions.Contains(Path.GetExtension(files[0]).ToLower()))
+                {
+                    // Добавляем отдельный файл в плейлист
+                    audioFilesList.Add(files[0]);
+                    filteredAudioFilesList.Add(files[0]);
+                    UpdateMusicListBox();
+                }
+            }
+        }
+
+        private void SaveFavorites()
+        {
+            SaveSettings();
         }
 
         private void select_folder_Click(object sender, EventArgs e)
@@ -390,416 +1058,14 @@ namespace MusicLocalUI
 
         private void musicListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Можно добавить предпросмотр при изменении выбора
-            // или другие действия при изменении выделенного элемента
+            // Можно добавить дополнительные действия при изменении выбора
         }
 
-        private void musicListBox_DoubleClick(object sender, EventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (musicListBox.SelectedIndex < 0) return;
-
-            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
-
-            if (musicListBox.SelectedIndex >= displayList.Count)
-                return;
-
-            try
-            {
-                // Получаем полный путь к файлу напрямую по индексу
-                string filePath = displayList[musicListBox.SelectedIndex];
-
-                if (File.Exists(filePath))
-                {
-                    PreviousPlay.Enabled = true;
-                    NextPlay.Enabled = true;
-                    StartPausePlay.Enabled = true;
-                    StartPausePlay.Text = "⏸"; // Устанавливаем иконку pause
-                    PlayAudioFile(filePath);
-                }
-                else
-                {
-                    MessageBox.Show("Audio file not found!", "Error",
-                                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    // Можно автоматически удалить отсутствующий файл из списка
-                    audioFilesList.Remove(filePath);
-                    filteredAudioFilesList.Remove(filePath);
-                    UpdateMusicListBox();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}", "Playback Error",
-                               MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            SaveSettings();
+            base.OnFormClosing(e);
         }
 
-        private void PlayAudioFile(string filePath)
-        {
-            try
-            {
-                player.controls.stop();
-                player.URL = filePath;
-                player.controls.play();
-
-                // Сбрасываем прогресс-бар
-                playbackProgressBar.Value = 0;
-                playbackTimer.Start();
-
-                var metadata = GetAudioMetadata(filePath);
-
-                // Обновляем элементы управления на форме
-                TrackDuration.Text = "Duration: " + metadata.Duration;
-                TrackBitRate.Text = "Bit rate: " + metadata.Bitrate;
-                TrackExtension.Text = "Extension: " + metadata.FileExtension;
-                TrackSize.Text = "Size: " + metadata.FileSize;
-                TrackCreated.Text = "Created: " + metadata.CreatedDate;
-                TrackAlbum.Text = "Album: " + metadata.Album;
-                TrackGenre.Text = "Genre: " + metadata.Genre;
-                TrackArtist.Text = "Artist: " + metadata.Artist;
-
-                string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
-                NowPlaying.Text = MusicName.Length > 65
-                    ? MusicName.Insert(63, Environment.NewLine + "                     ")
-                    : MusicName;
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error playing file: {ex.Message}", "Error",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void PreviousPlay_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
-                if (displayList.Count == 0) return;
-
-                int currentIndex = musicListBox.SelectedIndex;
-                int newIndex = currentIndex <= 0 ? displayList.Count - 1 : currentIndex - 1;
-
-                musicListBox.SelectedIndex = newIndex;
-                PlayCurrentSelectedFile();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error playing previous track: {ex.Message}", "Error",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void StartPausePlay_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (player.playState == WMPPlayState.wmppsPlaying)
-                {
-                    player.controls.pause();
-                    StartPausePlay.Text = "▶"; // Или установите иконку play
-                    playbackTimer.Stop();
-                }
-                else
-                {
-                    if (player.playState == WMPPlayState.wmppsPaused)
-                    {
-                        player.controls.play();
-                    }
-                    else if (musicListBox.SelectedIndex >= 0)
-                    {
-                        PlayCurrentSelectedFile();
-                    }
-                    else if (audioFilesList.Count > 0)
-                    {
-                        musicListBox.SelectedIndex = 0;
-                        PlayCurrentSelectedFile();
-                    }
-                    playbackTimer.Start();
-                    StartPausePlay.Text = "⏸"; // Или установите иконку pause
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error controlling playback: {ex.Message}", "Error",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void NextPlay_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
-                if (displayList.Count == 0) return;
-
-                int newIndex;
-                if (musicListBox.SelectedIndex < 0)
-                {
-                    newIndex = 0;
-                }
-                else
-                {
-                    newIndex = (musicListBox.SelectedIndex + 1) % displayList.Count;
-                }
-
-                musicListBox.SelectedIndex = newIndex;
-                PlayCurrentSelectedFile();
-
-                // Прокручиваем ListBox к текущему элементу
-                musicListBox.TopIndex = Math.Max(0, newIndex - 5);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error playing next track: {ex.Message}", "Error",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void RandomPlay()
-        {
-            try
-            {
-                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
-                if (displayList.Count == 0) return;
-
-                int newIndex;
-                Random rnd = new Random();
-                newIndex = rnd.Next(displayList.Count);
-
-                musicListBox.SelectedIndex = newIndex;
-                PlayCurrentSelectedFile();
-
-                // Прокручиваем ListBox к текущему элементу
-                musicListBox.TopIndex = Math.Max(0, newIndex - 5);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error playing random track: {ex.Message}", "Error",
-                              MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void PlayCurrentSelectedFile()
-        {
-            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
-
-            if (musicListBox.SelectedIndex < 0 || musicListBox.SelectedIndex >= displayList.Count)
-                return;
-
-            string filePath = displayList[musicListBox.SelectedIndex];
-            if (File.Exists(filePath))
-            {
-                PlayAudioFile(filePath);
-                StartPausePlay.Text = "⏸"; // Устанавливаем иконку pause
-            }
-            else
-            {
-                MessageBox.Show("File not found: " + Path.GetFileName(filePath), "Error",
-                              MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        private void PlaybackTimer_Tick(object sender, EventArgs e)
-        {
-            UpdateTimeDisplay();
-        }
-
-        private string FormatTime(double seconds)
-        {
-            TimeSpan time = TimeSpan.FromSeconds(seconds);
-
-            return time.TotalHours >= 1
-                ? $"{(int)time.TotalHours:00}:{time.Minutes:00}:{time.Seconds:00}"
-                : $"{time.Minutes:00}:{time.Seconds:00}";
-        }
-
-        private void PlaybackProgressBar_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (player.currentMedia != null)
-            {
-                // Устанавливаем новую позицию воспроизведения
-                double newPosition = (double)e.X / playbackProgressBar.Width * player.currentMedia.duration;
-                player.controls.currentPosition = newPosition;
-
-                playbackProgressBar.Value = (int)newPosition;
-                isUserSeeking = false;
-            }
-        }
-
-        private void UpdateTimeDisplay()
-        {
-            try
-            {
-                if (player.currentMedia != null)
-                {
-                    double currentPos = player.controls.currentPosition;
-                    double totalDuration = player.currentMedia.duration;
-
-                    // Обновляем прогресс-бар
-                    playbackProgressBar.Maximum = (int)totalDuration;
-                    playbackProgressBar.Value = (int)currentPos;
-
-                    // Обновляем метку времени
-                    timeLabel.Text = $"{FormatTime(currentPos)} / {FormatTime(totalDuration)}";
-
-                    // Проверяем завершение трека (с небольшим запасом)
-                    if (totalDuration - currentPos < 0.5 && player.playState == WMPPlayState.wmppsPlaying)
-                    {
-                        if (orderSong)
-                        {
-                            NextPlay_Click(null, null);
-                        }
-                        else if (randomSong)
-                        {
-                            RandomPlay();
-                        }
-                        else if (repeatSong)
-                        {
-                            PlayCurrentSelectedFile();
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Игнорируем ошибки обновления UI
-            }
-        }
-
-        public AudioMetadata GetAudioMetadata(string filePath)
-        {
-            var metadata = new AudioMetadata();
-            var fileInfo = new FileInfo(filePath);
-
-            try
-            {
-                // Получаем техническую информацию через TagLib
-                using (var file = TagLib.File.Create(filePath))
-                {
-                    metadata.Title = file.Tag.Title ?? Path.GetFileNameWithoutExtension(filePath);
-                    metadata.Artist = file.Tag.FirstPerformer ?? "Unknown Artist";
-                    metadata.Album = file.Tag.Album ?? "Unknown Album";
-                    metadata.Genre = file.Tag.FirstGenre ?? "Unknown Genre";
-
-                    // Форматируем длительность с часами, минутами и секундами
-                    TimeSpan duration = file.Properties.Duration;
-                    metadata.Duration = duration.TotalHours >= 1
-                        ? duration.ToString(@"hh\:mm\:ss")
-                        : duration.ToString(@"mm\:ss");
-
-                    metadata.Bitrate = $"{file.Properties.AudioBitrate} kbps";
-                }
-
-                // Получаем файловые атрибуты
-                metadata.FileExtension = fileInfo.Extension.ToUpper().TrimStart('.');
-                metadata.FileSize = FormatFileSize(fileInfo.Length);
-                metadata.CreatedDate = fileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error reading metadata: {ex.Message}");
-            }
-
-            return metadata;
-        }
-
-        private string FormatFileSize(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB" };
-            int order = 0;
-            double len = bytes;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len /= 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
-
-        private void OrderBut_Click(object sender, EventArgs e)
-        {
-            orderSong = true;
-            randomSong = false;
-            repeatSong = false;
-            check_play_method();
-        }
-
-        private void RandomBut_Click(object sender, EventArgs e)
-        {
-            randomSong = true;
-            orderSong = false;
-            repeatSong = false;
-            check_play_method();
-        }
-
-        private void RepeatBut_Click(object sender, EventArgs e)
-        {
-            repeatSong = true;
-            orderSong = false;
-            randomSong = false;
-            check_play_method();
-        }
-
-        private void check_play_method()
-        {
-            if (orderSong)
-            {
-                OrderBut.BackColor = Color.Green;
-                OrderBut.ForeColor = Color.White;
-                RandomBut.BackColor = Color.LightGray;
-                RandomBut.ForeColor = Color.Black;
-                RepeatBut.BackColor = Color.LightGray;
-                RepeatBut.ForeColor = Color.Black;
-            }
-            else if (randomSong)
-            {
-                RandomBut.BackColor = Color.Green;
-                RandomBut.ForeColor = Color.White;
-                OrderBut.BackColor = Color.LightGray;
-                OrderBut.ForeColor = Color.Black;
-                RepeatBut.BackColor = Color.LightGray;
-                RepeatBut.ForeColor = Color.Black;
-            }
-            else if (repeatSong)
-            {
-                RepeatBut.BackColor = Color.Green;
-                RepeatBut.ForeColor = Color.White;
-                OrderBut.BackColor = Color.LightGray;
-                OrderBut.ForeColor = Color.Black;
-                RandomBut.BackColor = Color.LightGray;
-                RandomBut.ForeColor = Color.Black;
-            }
-        }
-
-        private void volumeTrackBar_Scroll(object sender, EventArgs e)
-        {
-            player.settings.volume = volumeTrackBar.Value;
-            volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
-        }
-
-        private void MainApp_Load(object sender, EventArgs e)
-        {
-            // Дополнительная инициализация при загрузке формы
-            volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
-        }
-
-        // Добавляем возможность перетаскивания файлов
-        private void MainApp_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                e.Effect = DragDropEffects.Copy;
-        }
-
-        private void MainApp_DragDrop(object sender, DragEventArgs e)
-        {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length > 0 && Directory.Exists(files[0]))
-            {
-                path_to_music_folder = files[0];
-                path_to_folder.Text = path_to_music_folder;
-                scan_folder_Click(null, null);
-            }
-        }
     }
 }
