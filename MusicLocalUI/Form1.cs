@@ -49,7 +49,7 @@ namespace MusicLocalUI
             public string Album { get; set; }
             public string Genre { get; set; }
             public string Year { get; set; }
-            public Image AlbumArt { get; set; } // Добавлено новое свойство
+            public Image AlbumArt { get; set; }
         }
 
         public MainApp()
@@ -59,7 +59,6 @@ namespace MusicLocalUI
             volumeTrackBar.Value = 50;
             player.settings.volume = volumeTrackBar.Value;
 
-            // Инициализация таймера для обновления прогресса
             playbackTimer = new Timer { Interval = 500 };
             playbackTimer.Tick += PlaybackTimer_Tick;
             playbackProgressBar.MouseDown += (s, e) => isUserSeeking = true;
@@ -76,16 +75,12 @@ namespace MusicLocalUI
                 this.Invoke((MethodInvoker)UpdateTimeDisplay);
             };
 
-            // Настройка поиска
             searchTextBox.TextChanged += SearchTextBox_TextChanged;
             searchTextBox.Enter += (s, e) => { if (searchTextBox.Text == "Search...") { searchTextBox.Text = ""; searchTextBox.ForeColor = Color.Black; } };
             searchTextBox.Leave += (s, e) => { if (string.IsNullOrWhiteSpace(searchTextBox.Text)) { searchTextBox.Text = "Search..."; searchTextBox.ForeColor = Color.Gray; } };
-
-            // Настройка горячих клавиш
             this.KeyPreview = true;
             this.KeyDown += MainApp_KeyDown;
 
-            // Загрузка настроек
             LoadSettings();
         }
 
@@ -162,7 +157,6 @@ namespace MusicLocalUI
             muteButton.Text = player.settings.mute ? "🔇" : "🔊";
         }
 
-        // ПОИСК
         private void SearchTextBox_TextChanged(object sender, EventArgs e)
         {
             if (searchTextBox.Text == "Search..." || string.IsNullOrWhiteSpace(searchTextBox.Text))
@@ -221,7 +215,6 @@ namespace MusicLocalUI
             searchClearBtn.Visible = false;
         }
 
-        // СКАНИРОВАНИЕ ПАПКИ
         private async void scan_folder_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(path_to_music_folder) || !Directory.Exists(path_to_music_folder))
@@ -364,7 +357,6 @@ namespace MusicLocalUI
             musicListBox.Visible = true;
         }
 
-        // ОТРИСОВКА СПИСКА МУЗЫКИ
         private void DrawMusicListItem(object sender, DrawItemEventArgs e)
         {
             if (e.Index < 0) return;
@@ -388,12 +380,10 @@ namespace MusicLocalUI
 
             e.Graphics.DrawLine(Pens.LightGray, e.Bounds.Left, e.Bounds.Top, e.Bounds.Right, e.Bounds.Top);
 
-            // Название трека (с сердечком для избранных)
             var titleRect = new Rectangle(e.Bounds.X + 15, e.Bounds.Y + 5, e.Bounds.Width - 30, e.Bounds.Height / 2);
             TextRenderer.DrawText(e.Graphics, title, new Font(e.Font, FontStyle.Bold),
                                  titleRect, textColor, TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
 
-            // Длительность
             var durationRect = new Rectangle(e.Bounds.X + 15, e.Bounds.Y + e.Bounds.Height / 2,
                                            e.Bounds.Width - 30, e.Bounds.Height / 2);
             TextRenderer.DrawText(e.Graphics, duration, e.Font, durationRect,
@@ -402,7 +392,6 @@ namespace MusicLocalUI
             if (isSelected) e.DrawFocusRectangle();
         }
 
-        // ВОСПРОИЗВЕДЕНИЕ
         private void musicListBox_DoubleClick(object sender, EventArgs e)
         {
             if (musicListBox.SelectedIndex < 0) return;
@@ -454,22 +443,17 @@ namespace MusicLocalUI
 
                 currentTrackMetadata = GetAudioMetadata(filePath);
 
-                // Базовая информация
                 TrackDuration.Text = "Duration: " + currentTrackMetadata.Duration;
                 TrackBitRate.Text = "Bit rate: " + currentTrackMetadata.Bitrate;
                 TrackSize.Text = "Size: " + currentTrackMetadata.FileSize;
 
-                // Обновление обложки
                 if (currentTrackMetadata.AlbumArt != null)
                 {
                     albumArtPictureBox.Image = currentTrackMetadata.AlbumArt;
                 }
                 else
                 {
-                    // Установить изображение по умолчанию или очистить
                     albumArtPictureBox.Image = null;
-                    // Или можно установить изображение-заглушку:
-                    // albumArtPictureBox.Image = Properties.Resources.DefaultAlbumArt;
                 }
 
                 string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
@@ -477,7 +461,6 @@ namespace MusicLocalUI
                     ? MusicName.Insert(63, Environment.NewLine + "                     ")
                     : MusicName;
 
-                // Обновляем кнопку избранного
                 UpdateFavoriteButton(filePath);
 
             }
@@ -490,7 +473,6 @@ namespace MusicLocalUI
 
         private void AddToHistory(string filePath)
         {
-            // Удаляем все элементы после текущего индекса
             if (currentHistoryIndex < playHistory.Count - 1)
             {
                 playHistory.RemoveRange(currentHistoryIndex + 1, playHistory.Count - currentHistoryIndex - 1);
@@ -508,7 +490,6 @@ namespace MusicLocalUI
             historyForwardBtn.Enabled = currentHistoryIndex < playHistory.Count - 1;
         }
 
-        // УПРАВЛЕНИЕ ВОСПРОИЗВЕДЕНИЕМ
         private void PreviousPlay_Click(object sender, EventArgs e)
         {
             try
@@ -649,7 +630,6 @@ namespace MusicLocalUI
             }
         }
 
-        // ПРОГРЕСС ВОСПРОИЗВЕДЕНИЯ
         private void PlaybackTimer_Tick(object sender, EventArgs e)
         {
             UpdateTimeDisplay();
@@ -713,11 +693,9 @@ namespace MusicLocalUI
             }
             catch
             {
-                // Игнорируем ошибки обновления UI
             }
         }
 
-        // МЕТАДАННЫЕ
         public AudioMetadata GetAudioMetadata(string filePath)
         {
             var metadata = new AudioMetadata();
@@ -740,7 +718,6 @@ namespace MusicLocalUI
 
                     metadata.Bitrate = $"{file.Properties.AudioBitrate} kbps";
 
-                    // Извлечение обложки
                     if (file.Tag.Pictures.Length > 0)
                     {
                         var picture = file.Tag.Pictures[0];
@@ -751,7 +728,7 @@ namespace MusicLocalUI
                     }
                     else
                     {
-                        metadata.AlbumArt = null; // Нет обложки
+                        metadata.AlbumArt = null;
                     }
                 }
 
@@ -782,7 +759,6 @@ namespace MusicLocalUI
             return $"{len:0.##} {sizes[order]}";
         }
 
-        // РЕЖИМЫ ВОСПРОИЗВЕДЕНИЯ
         private void OrderBut_Click(object sender, EventArgs e)
         {
             orderSong = true;
@@ -834,14 +810,12 @@ namespace MusicLocalUI
             RepeatAllBut.ForeColor = repeatAll ? Color.White : Color.Black;
         }
 
-        // ГРОМКОСТЬ
         private void volumeTrackBar_Scroll(object sender, EventArgs e)
         {
             player.settings.volume = volumeTrackBar.Value;
             volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
         }
 
-        // ИСТОРИЯ ВОСПРОИЗВЕДЕНИЯ
         private void historyBackBtn_Click(object sender, EventArgs e)
         {
             if (currentHistoryIndex > 0)
@@ -864,7 +838,6 @@ namespace MusicLocalUI
             }
         }
 
-        // ИЗБРАННОЕ
         private void favoriteButton_Click(object sender, EventArgs e)
         {
             if (musicListBox.SelectedIndex >= 0)
@@ -912,7 +885,6 @@ namespace MusicLocalUI
             }
         }
 
-        // ПЛЕЙЛИСТЫ
         private void SavePlaylist(object sender, EventArgs e)
         {
             if (audioFilesList.Count == 0) return;
@@ -954,7 +926,6 @@ namespace MusicLocalUI
                     filteredAudioFilesList.AddRange(audioFilesList);
                     currentPlaylist = openDialog.FileName;
 
-                    // Пересчитываем общую длительность
                     totalDurationSeconds = 0;
                     foreach (var file in audioFilesList)
                     {
@@ -962,7 +933,9 @@ namespace MusicLocalUI
                         totalDurationSeconds += duration;
                     }
 
+                    SetupListBox();
                     UpdateMusicListBox();
+
                     MessageBox.Show("Playlist loaded successfully!", "Success",
                                   MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -974,7 +947,6 @@ namespace MusicLocalUI
             }
         }
 
-        // MORE INFO
         private void moreInfoButton_Click(object sender, EventArgs e)
         {
             if (currentTrackMetadata != null)
@@ -1000,7 +972,6 @@ namespace MusicLocalUI
             }
         }
 
-        // НАСТРОЙКИ
         private void SaveSettings()
         {
             try
@@ -1047,7 +1018,6 @@ namespace MusicLocalUI
             }
         }
 
-        // СИСТЕМНЫЕ ФУНКЦИИ
         private void MainApp_Load(object sender, EventArgs e)
         {
             volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
@@ -1075,7 +1045,6 @@ namespace MusicLocalUI
                 }
                 else if (File.Exists(files[0]) && audioExtensions.Contains(Path.GetExtension(files[0]).ToLower()))
                 {
-                    // Добавляем отдельный файл в плейлист
                     audioFilesList.Add(files[0]);
                     filteredAudioFilesList.Add(files[0]);
                     UpdateMusicListBox();
@@ -1122,7 +1091,6 @@ namespace MusicLocalUI
 
         private void musicListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Можно добавить дополнительные действия при изменении выбора
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
