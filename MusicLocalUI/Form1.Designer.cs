@@ -63,6 +63,7 @@
             this.TotalTime = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.TotalFiles = new System.Windows.Forms.Label();
+            this.albumArtPictureBox = new System.Windows.Forms.PictureBox();
             this.label7 = new System.Windows.Forms.Label();
             this.NowPlaying = new System.Windows.Forms.Label();
             this.StartPausePlay = new System.Windows.Forms.Button();
@@ -81,6 +82,7 @@
             this.groupBox1.SuspendLayout();
             this.playbackControlPanel.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.albumArtPictureBox)).BeginInit();
             this.searchPanel.SuspendLayout();
             this.volumePanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.volumeTrackBar)).BeginInit();
@@ -379,6 +381,7 @@
             this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.TotalFiles);
+            this.groupBox2.Controls.Add(this.albumArtPictureBox);
             this.groupBox2.Location = new System.Drawing.Point(18, 48);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(485, 258);
@@ -455,6 +458,15 @@
             this.TotalFiles.Size = new System.Drawing.Size(52, 17);
             this.TotalFiles.TabIndex = 13;
             this.TotalFiles.Text = "Found:";
+            // 
+            // albumArtPictureBox
+            // 
+            this.albumArtPictureBox.Location = new System.Drawing.Point(9, 134);
+            this.albumArtPictureBox.Name = "albumArtPictureBox";
+            this.albumArtPictureBox.Size = new System.Drawing.Size(157, 118);
+            this.albumArtPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.albumArtPictureBox.TabIndex = 20;
+            this.albumArtPictureBox.TabStop = false;
             // 
             // label7
             // 
@@ -640,6 +652,7 @@
             this.playbackControlPanel.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.albumArtPictureBox)).EndInit();
             this.searchPanel.ResumeLayout(false);
             this.searchPanel.PerformLayout();
             this.volumePanel.ResumeLayout(false);
@@ -661,6 +674,7 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox path_to_folder;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.PictureBox albumArtPictureBox;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button select_folder;
         private System.Windows.Forms.Label label7;
@@ -701,5 +715,6 @@
         private System.Windows.Forms.Button favoriteButton;
         private System.Windows.Forms.Button muteButton;
         private System.Windows.Forms.Button moreInfoButton;
+
     }
 }

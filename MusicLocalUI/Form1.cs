@@ -49,6 +49,7 @@ namespace MusicLocalUI
             public string Album { get; set; }
             public string Genre { get; set; }
             public string Year { get; set; }
+            public Image AlbumArt { get; set; } // Добавлено новое свойство
         }
 
         public MainApp()
@@ -458,6 +459,19 @@ namespace MusicLocalUI
                 TrackBitRate.Text = "Bit rate: " + currentTrackMetadata.Bitrate;
                 TrackSize.Text = "Size: " + currentTrackMetadata.FileSize;
 
+                // Обновление обложки
+                if (currentTrackMetadata.AlbumArt != null)
+                {
+                    albumArtPictureBox.Image = currentTrackMetadata.AlbumArt;
+                }
+                else
+                {
+                    // Установить изображение по умолчанию или очистить
+                    albumArtPictureBox.Image = null;
+                    // Или можно установить изображение-заглушку:
+                    // albumArtPictureBox.Image = Properties.Resources.DefaultAlbumArt;
+                }
+
                 string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
                 NowPlaying.Text = MusicName.Length > 65
                     ? MusicName.Insert(63, Environment.NewLine + "                     ")
@@ -725,6 +739,20 @@ namespace MusicLocalUI
                         : duration.ToString(@"mm\:ss");
 
                     metadata.Bitrate = $"{file.Properties.AudioBitrate} kbps";
+
+                    // Извлечение обложки
+                    if (file.Tag.Pictures.Length > 0)
+                    {
+                        var picture = file.Tag.Pictures[0];
+                        using (var ms = new MemoryStream(picture.Data.Data))
+                        {
+                            metadata.AlbumArt = Image.FromStream(ms);
+                        }
+                    }
+                    else
+                    {
+                        metadata.AlbumArt = null; // Нет обложки
+                    }
                 }
 
                 metadata.FileExtension = fileInfo.Extension.ToUpper().TrimStart('.');
@@ -734,10 +762,12 @@ namespace MusicLocalUI
             catch (Exception ex)
             {
                 Console.WriteLine($"Error reading metadata: {ex.Message}");
+                metadata.AlbumArt = null;
             }
 
             return metadata;
         }
+
 
         private string FormatFileSize(long bytes)
         {
