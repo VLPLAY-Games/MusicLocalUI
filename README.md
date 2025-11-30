@@ -3,7 +3,7 @@
 - [Read in Russian](README.ru.md)
 - [Read in Japanese](README.ja.md)
 
-![ui](https://github.com/user-attachments/assets/6aa030e0-b3b0-4f1d-99df-3f6403cb037d)
+![ui](ui.png)
 
 A lightweight Windows music player for local audio files with advanced features and intuitive interface.
 
