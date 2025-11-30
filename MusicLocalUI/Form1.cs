@@ -20,24 +20,15 @@ namespace MusicLocalUI
         private string[] allFiles;
         private int totalDurationSeconds = 0;
         private List<string> audioFilesList = new List<string>();
+        private List<string> filteredAudioFilesList = new List<string>();
         private WindowsMediaPlayer player = new WindowsMediaPlayer();
         private Timer playbackTimer;
         private bool isUserSeeking = false;
 
-
         private bool orderSong = true;
         private bool repeatSong = false;
         private bool randomSong = false;
-
-
-        private void MainApp_KeyDown(object sender, KeyEventArgs e)
-        {
-            // нажата комбинация Ctrl + F
-            if (e.Control && e.KeyCode == Keys.F)
-            {
-                
-            }
-        }
+        private bool isSearchActive = false;
 
         public class AudioMetadata
         {
@@ -56,6 +47,8 @@ namespace MusicLocalUI
         {
             InitializeComponent();
             playbackProgressBar.ForeColor = Color.DodgerBlue;
+            volumeTrackBar.Value = 50;
+            player.settings.volume = volumeTrackBar.Value;
 
             // Инициализация таймера для обновления прогресса
             playbackTimer = new Timer { Interval = 500 };
@@ -76,21 +69,103 @@ namespace MusicLocalUI
                 // Обновляем время при любом изменении состояния
                 this.Invoke((MethodInvoker)UpdateTimeDisplay);
             };
+
+            // Настройка поиска
+            searchTextBox.TextChanged += SearchTextBox_TextChanged;
+            searchTextBox.Enter += (s, e) => { if (searchTextBox.Text == "Search...") { searchTextBox.Text = ""; searchTextBox.ForeColor = Color.Black; } };
+            searchTextBox.Leave += (s, e) => { if (string.IsNullOrWhiteSpace(searchTextBox.Text)) { searchTextBox.Text = "Search..."; searchTextBox.ForeColor = Color.Gray; } };
+
+            // Настройка горячих клавиш
+            this.KeyPreview = true;
+            this.KeyDown += MainApp_KeyDown;
         }
 
-        private void select_folder_Click(object sender, EventArgs e)
+        private void MainApp_KeyDown(object sender, KeyEventArgs e)
         {
-            using (FolderBrowserDialog folderDialo = new FolderBrowserDialog
+            switch (e.KeyCode)
             {
-                Description = "Select Folder with Music"
-            })
+                case Keys.Space:
+                    StartPausePlay_Click(null, null);
+                    e.Handled = true;
+                    break;
+                case Keys.Right:
+                    if (e.Control) NextPlay_Click(null, null);
+                    e.Handled = true;
+                    break;
+                case Keys.Left:
+                    if (e.Control) PreviousPlay_Click(null, null);
+                    e.Handled = true;
+                    break;
+                case Keys.F5:
+                    scan_folder_Click(null, null);
+                    e.Handled = true;
+                    break;
+                case Keys.Escape:
+                    if (!string.IsNullOrEmpty(searchTextBox.Text) && searchTextBox.Text != "Search...")
+                    {
+                        searchTextBox.Text = "Search...";
+                        searchTextBox.ForeColor = Color.Gray;
+                    }
+                    e.Handled = true;
+                    break;
+            }
+        }
+
+        private void SearchTextBox_TextChanged(object sender, EventArgs e)
+        {
+            if (searchTextBox.Text == "Search..." || string.IsNullOrWhiteSpace(searchTextBox.Text))
             {
-                if (folderDialog.ShowDialog() == DialogResult.OK)
+                isSearchActive = false;
+                filteredAudioFilesList.Clear();
+                filteredAudioFilesList.AddRange(audioFilesList);
+                UpdateMusicListBox();
+                searchClearBtn.Visible = false;
+            }
+            else
+            {
+                isSearchActive = true;
+                searchClearBtn.Visible = true;
+                FilterMusicList(searchTextBox.Text.ToLower());
+            }
+        }
+
+        private void FilterMusicList(string searchText)
+        {
+            filteredAudioFilesList.Clear();
+            for (int i = 0; i < audioFilesList.Count; i++)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(audioFilesList[i]);
+                if (fileName.ToLower().Contains(searchText))
                 {
-                    path_to_music_folder = folderDialog.SelectedPath;
-                    path_to_folder.Text = path_to_music_folder;
+                    filteredAudioFilesList.Add(audioFilesList[i]);
                 }
             }
+            UpdateMusicListBox();
+        }
+
+        private void UpdateMusicListBox()
+        {
+            musicListBox.BeginUpdate();
+            musicListBox.Items.Clear();
+
+            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+
+            for (int i = 0; i < displayList.Count; i++)
+            {
+                string file = displayList[i];
+                var (duration, durationString) = GetAudioFileInfo(file);
+                musicListBox.Items.Add($"{Path.GetFileNameWithoutExtension(file)}|||Duration: {durationString}");
+            }
+
+            musicListBox.EndUpdate();
+            UpdateStatusLabel();
+        }
+
+        private void searchClearBtn_Click(object sender, EventArgs e)
+        {
+            searchTextBox.Text = "Search...";
+            searchTextBox.ForeColor = Color.Gray;
+            searchClearBtn.Visible = false;
         }
 
         private async void scan_folder_Click(object sender, EventArgs e)
@@ -114,6 +189,9 @@ namespace MusicLocalUI
                 audioFilesList = Directory.GetFiles(path_to_music_folder, "*.*", SearchOption.AllDirectories)
                     .Where(file => audioExtensions.Contains(Path.GetExtension(file).ToLower()))
                     .ToList();
+
+                filteredAudioFilesList.Clear();
+                filteredAudioFilesList.AddRange(audioFilesList);
 
                 // Настройка элементов управления
                 scanProgressBar.Maximum = audioFilesList.Count;
@@ -178,7 +256,10 @@ namespace MusicLocalUI
                 var (duration, durationString) = GetAudioFileInfo(file);
                 totalDurationSeconds += duration;
 
-                musicListBox.Items.Add($"{Path.GetFileNameWithoutExtension(file)}|||Duration: {durationString}");
+                if (!isSearchActive || filteredAudioFilesList.Contains(file))
+                {
+                    musicListBox.Items.Add($"{Path.GetFileNameWithoutExtension(file)}|||Duration: {durationString}");
+                }
 
                 if (i % 5 == 0) await Task.Delay(1); // Периодическое освобождение потока
             }
@@ -217,7 +298,9 @@ namespace MusicLocalUI
             string totalTime = totalDurationSeconds > 0
                 ? $"{totalDurationSeconds / 3600}h {(totalDurationSeconds % 3600) / 60}m {totalDurationSeconds % 60}s"
                 : "N/A";
-            TotalFiles.Text = $"Found: {audioFilesList.Count} tracks";
+
+            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+            TotalFiles.Text = $"Found: {audioFilesList.Count} tracks (Showing: {displayList.Count})";
             TotalTime.Text = $"Total duration: {totalTime}";
         }
 
@@ -273,6 +356,20 @@ namespace MusicLocalUI
             if (isSelected) e.DrawFocusRectangle();
         }
 
+        private void select_folder_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog
+            {
+                Description = "Select Folder with Music"
+            })
+            {
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    path_to_music_folder = folderDialog.SelectedPath;
+                    path_to_folder.Text = path_to_music_folder;
+                }
+            }
+        }
 
         private void path_to_folder_TextChanged(object sender, EventArgs e)
         {
@@ -295,18 +392,21 @@ namespace MusicLocalUI
         {
             // Можно добавить предпросмотр при изменении выбора
             // или другие действия при изменении выделенного элемента
-            // потом
         }
 
         private void musicListBox_DoubleClick(object sender, EventArgs e)
         {
-            if (musicListBox.SelectedIndex < 0 || musicListBox.SelectedIndex >= audioFilesList.Count)
+            if (musicListBox.SelectedIndex < 0) return;
+
+            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+
+            if (musicListBox.SelectedIndex >= displayList.Count)
                 return;
 
             try
             {
                 // Получаем полный путь к файлу напрямую по индексу
-                string filePath = audioFilesList[musicListBox.SelectedIndex];
+                string filePath = displayList[musicListBox.SelectedIndex];
 
                 if (File.Exists(filePath))
                 {
@@ -321,8 +421,9 @@ namespace MusicLocalUI
                     MessageBox.Show("Audio file not found!", "Error",
                                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     // Можно автоматически удалить отсутствующий файл из списка
-                    audioFilesList.RemoveAt(musicListBox.SelectedIndex);
-                    musicListBox.Items.RemoveAt(musicListBox.SelectedIndex);
+                    audioFilesList.Remove(filePath);
+                    filteredAudioFilesList.Remove(filePath);
+                    UpdateMusicListBox();
                 }
             }
             catch (Exception ex)
@@ -352,8 +453,9 @@ namespace MusicLocalUI
                 TrackExtension.Text = "Extension: " + metadata.FileExtension;
                 TrackSize.Text = "Size: " + metadata.FileSize;
                 TrackCreated.Text = "Created: " + metadata.CreatedDate;
-                
-
+                TrackAlbum.Text = "Album: " + metadata.Album;
+                TrackGenre.Text = "Genre: " + metadata.Genre;
+                TrackArtist.Text = "Artist: " + metadata.Artist;
 
                 string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
                 NowPlaying.Text = MusicName.Length > 65
@@ -372,10 +474,11 @@ namespace MusicLocalUI
         {
             try
             {
-                if (audioFilesList.Count == 0) return;
+                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+                if (displayList.Count == 0) return;
 
                 int currentIndex = musicListBox.SelectedIndex;
-                int newIndex = currentIndex <= 0 ? audioFilesList.Count - 1 : currentIndex - 1;
+                int newIndex = currentIndex <= 0 ? displayList.Count - 1 : currentIndex - 1;
 
                 musicListBox.SelectedIndex = newIndex;
                 PlayCurrentSelectedFile();
@@ -427,7 +530,8 @@ namespace MusicLocalUI
         {
             try
             {
-                if (audioFilesList.Count == 0) return;
+                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+                if (displayList.Count == 0) return;
 
                 int newIndex;
                 if (musicListBox.SelectedIndex < 0)
@@ -436,7 +540,7 @@ namespace MusicLocalUI
                 }
                 else
                 {
-                    newIndex = (musicListBox.SelectedIndex + 1) % audioFilesList.Count;
+                    newIndex = (musicListBox.SelectedIndex + 1) % displayList.Count;
                 }
 
                 musicListBox.SelectedIndex = newIndex;
@@ -456,11 +560,12 @@ namespace MusicLocalUI
         {
             try
             {
-                if (audioFilesList.Count == 0) return;
+                var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+                if (displayList.Count == 0) return;
 
                 int newIndex;
                 Random rnd = new Random();
-                newIndex = rnd.Next(audioFilesList.Count);
+                newIndex = rnd.Next(displayList.Count);
 
                 musicListBox.SelectedIndex = newIndex;
                 PlayCurrentSelectedFile();
@@ -475,13 +580,14 @@ namespace MusicLocalUI
             }
         }
 
-
         private void PlayCurrentSelectedFile()
         {
-            if (musicListBox.SelectedIndex < 0 || musicListBox.SelectedIndex >= audioFilesList.Count)
+            var displayList = isSearchActive ? filteredAudioFilesList : audioFilesList;
+
+            if (musicListBox.SelectedIndex < 0 || musicListBox.SelectedIndex >= displayList.Count)
                 return;
 
-            string filePath = audioFilesList[musicListBox.SelectedIndex];
+            string filePath = displayList[musicListBox.SelectedIndex];
             if (File.Exists(filePath))
             {
                 PlayAudioFile(filePath);
@@ -493,7 +599,6 @@ namespace MusicLocalUI
                               MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
-
 
         private void PlaybackTimer_Tick(object sender, EventArgs e)
         {
@@ -508,6 +613,7 @@ namespace MusicLocalUI
                 ? $"{(int)time.TotalHours:00}:{time.Minutes:00}:{time.Seconds:00}"
                 : $"{time.Minutes:00}:{time.Seconds:00}";
         }
+
         private void PlaybackProgressBar_MouseUp(object sender, MouseEventArgs e)
         {
             if (player.currentMedia != null)
@@ -520,6 +626,7 @@ namespace MusicLocalUI
                 isUserSeeking = false;
             }
         }
+
         private void UpdateTimeDisplay()
         {
             try
@@ -662,6 +769,36 @@ namespace MusicLocalUI
                 OrderBut.ForeColor = Color.Black;
                 RandomBut.BackColor = Color.LightGray;
                 RandomBut.ForeColor = Color.Black;
+            }
+        }
+
+        private void volumeTrackBar_Scroll(object sender, EventArgs e)
+        {
+            player.settings.volume = volumeTrackBar.Value;
+            volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
+        }
+
+        private void MainApp_Load(object sender, EventArgs e)
+        {
+            // Дополнительная инициализация при загрузке формы
+            volumeLabel.Text = $"Volume: {volumeTrackBar.Value}%";
+        }
+
+        // Добавляем возможность перетаскивания файлов
+        private void MainApp_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private void MainApp_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files.Length > 0 && Directory.Exists(files[0]))
+            {
+                path_to_music_folder = files[0];
+                path_to_folder.Text = path_to_music_folder;
+                scan_folder_Click(null, null);
             }
         }
     }
