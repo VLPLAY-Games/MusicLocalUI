@@ -3,7 +3,7 @@
 - [英語で読む](README.md)
 - [ロシア語で読む](README.ru.md)
 
-![ui](https://github.com/user-attachments/assets/6aa030e0-b3b0-4f1d-99df-3f6403cb037d)
+![ui](ui.png)
 
 高度な機能と直感的なインターフェースを備えた軽量なWindows用ローカルオーディオプレイヤー。
 
