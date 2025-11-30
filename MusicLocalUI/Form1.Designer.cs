@@ -56,13 +56,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.TrackYear = new System.Windows.Forms.Label();
-            this.TrackArtist = new System.Windows.Forms.Label();
-            this.TrackGenre = new System.Windows.Forms.Label();
-            this.TrackAlbum = new System.Windows.Forms.Label();
-            this.TrackCreated = new System.Windows.Forms.Label();
+            this.moreInfoButton = new System.Windows.Forms.Button();
             this.TrackSize = new System.Windows.Forms.Label();
-            this.TrackExtension = new System.Windows.Forms.Label();
             this.TrackBitRate = new System.Windows.Forms.Label();
             this.TrackDuration = new System.Windows.Forms.Label();
             this.TotalTime = new System.Windows.Forms.Label();
@@ -376,13 +371,8 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.TrackYear);
-            this.groupBox2.Controls.Add(this.TrackArtist);
-            this.groupBox2.Controls.Add(this.TrackGenre);
-            this.groupBox2.Controls.Add(this.TrackAlbum);
-            this.groupBox2.Controls.Add(this.TrackCreated);
+            this.groupBox2.Controls.Add(this.moreInfoButton);
             this.groupBox2.Controls.Add(this.TrackSize);
-            this.groupBox2.Controls.Add(this.TrackExtension);
             this.groupBox2.Controls.Add(this.TrackBitRate);
             this.groupBox2.Controls.Add(this.TrackDuration);
             this.groupBox2.Controls.Add(this.TotalTime);
@@ -395,123 +385,74 @@
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             // 
-            // TrackYear
+            // moreInfoButton
             // 
-            this.TrackYear.AutoSize = true;
-            this.TrackYear.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackYear.Location = new System.Drawing.Point(256, 230);
-            this.TrackYear.Name = "TrackYear";
-            this.TrackYear.Size = new System.Drawing.Size(47, 20);
-            this.TrackYear.TabIndex = 23;
-            this.TrackYear.Text = "Year:";
-            // 
-            // TrackArtist
-            // 
-            this.TrackArtist.AutoSize = true;
-            this.TrackArtist.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackArtist.Location = new System.Drawing.Point(256, 201);
-            this.TrackArtist.Name = "TrackArtist";
-            this.TrackArtist.Size = new System.Drawing.Size(50, 20);
-            this.TrackArtist.TabIndex = 22;
-            this.TrackArtist.Text = "Artist:";
-            // 
-            // TrackGenre
-            // 
-            this.TrackGenre.AutoSize = true;
-            this.TrackGenre.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackGenre.Location = new System.Drawing.Point(256, 172);
-            this.TrackGenre.Name = "TrackGenre";
-            this.TrackGenre.Size = new System.Drawing.Size(58, 20);
-            this.TrackGenre.TabIndex = 21;
-            this.TrackGenre.Text = "Genre:";
-            // 
-            // TrackAlbum
-            // 
-            this.TrackAlbum.AutoSize = true;
-            this.TrackAlbum.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackAlbum.Location = new System.Drawing.Point(256, 143);
-            this.TrackAlbum.Name = "TrackAlbum";
-            this.TrackAlbum.Size = new System.Drawing.Size(58, 20);
-            this.TrackAlbum.TabIndex = 20;
-            this.TrackAlbum.Text = "Album:";
-            // 
-            // TrackCreated
-            // 
-            this.TrackCreated.AutoSize = true;
-            this.TrackCreated.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackCreated.Location = new System.Drawing.Point(256, 114);
-            this.TrackCreated.Name = "TrackCreated";
-            this.TrackCreated.Size = new System.Drawing.Size(70, 20);
-            this.TrackCreated.TabIndex = 19;
-            this.TrackCreated.Text = "Created:";
+            this.moreInfoButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.moreInfoButton.Location = new System.Drawing.Point(257, 140);
+            this.moreInfoButton.Name = "moreInfoButton";
+            this.moreInfoButton.Size = new System.Drawing.Size(75, 23);
+            this.moreInfoButton.TabIndex = 25;
+            this.moreInfoButton.Text = "More Info";
+            this.moreInfoButton.UseVisualStyleBackColor = true;
+            this.moreInfoButton.Click += new System.EventHandler(this.moreInfoButton_Click);
             // 
             // TrackSize
             // 
             this.TrackSize.AutoSize = true;
-            this.TrackSize.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackSize.Location = new System.Drawing.Point(256, 85);
+            this.TrackSize.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackSize.Location = new System.Drawing.Point(257, 85);
             this.TrackSize.Name = "TrackSize";
-            this.TrackSize.Size = new System.Drawing.Size(44, 20);
+            this.TrackSize.Size = new System.Drawing.Size(39, 17);
             this.TrackSize.TabIndex = 18;
             this.TrackSize.Text = "Size:";
-            // 
-            // TrackExtension
-            // 
-            this.TrackExtension.AutoSize = true;
-            this.TrackExtension.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackExtension.Location = new System.Drawing.Point(361, 201);
-            this.TrackExtension.Name = "TrackExtension";
-            this.TrackExtension.Size = new System.Drawing.Size(83, 20);
-            this.TrackExtension.TabIndex = 17;
-            this.TrackExtension.Text = "Extension:";
             // 
             // TrackBitRate
             // 
             this.TrackBitRate.AutoSize = true;
-            this.TrackBitRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackBitRate.Location = new System.Drawing.Point(361, 230);
+            this.TrackBitRate.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackBitRate.Location = new System.Drawing.Point(257, 111);
             this.TrackBitRate.Name = "TrackBitRate";
-            this.TrackBitRate.Size = new System.Drawing.Size(64, 20);
+            this.TrackBitRate.Size = new System.Drawing.Size(57, 17);
             this.TrackBitRate.TabIndex = 16;
             this.TrackBitRate.Text = "Bit rate:";
             // 
             // TrackDuration
             // 
             this.TrackDuration.AutoSize = true;
-            this.TrackDuration.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TrackDuration.Location = new System.Drawing.Point(256, 58);
+            this.TrackDuration.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TrackDuration.Location = new System.Drawing.Point(257, 58);
             this.TrackDuration.Name = "TrackDuration";
-            this.TrackDuration.Size = new System.Drawing.Size(74, 20);
+            this.TrackDuration.Size = new System.Drawing.Size(66, 17);
             this.TrackDuration.TabIndex = 15;
             this.TrackDuration.Text = "Duration:";
             // 
             // TotalTime
             // 
             this.TotalTime.AutoSize = true;
-            this.TotalTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TotalTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TotalTime.Location = new System.Drawing.Point(7, 85);
             this.TotalTime.Name = "TotalTime";
-            this.TotalTime.Size = new System.Drawing.Size(110, 20);
+            this.TotalTime.Size = new System.Drawing.Size(100, 17);
             this.TotalTime.TabIndex = 14;
             this.TotalTime.Text = "Total duration:";
             // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(254, 16);
+            this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(253, 16);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(119, 29);
+            this.label8.Size = new System.Drawing.Size(92, 24);
             this.label8.TabIndex = 5;
             this.label8.Text = "Track info";
             // 
             // TotalFiles
             // 
             this.TotalFiles.AutoSize = true;
-            this.TotalFiles.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TotalFiles.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TotalFiles.Location = new System.Drawing.Point(7, 58);
             this.TotalFiles.Name = "TotalFiles";
-            this.TotalFiles.Size = new System.Drawing.Size(59, 20);
+            this.TotalFiles.Size = new System.Drawing.Size(52, 17);
             this.TotalFiles.TabIndex = 13;
             this.TotalFiles.Text = "Found:";
             // 
@@ -737,18 +678,13 @@
         private System.Windows.Forms.Button PreviousPlay;
         private System.Windows.Forms.ProgressBar playbackProgressBar;
         private System.Windows.Forms.Label timeLabel;
-        private System.Windows.Forms.Label TrackExtension;
         private System.Windows.Forms.Label TrackBitRate;
         private System.Windows.Forms.Label TrackDuration;
         private System.Windows.Forms.Label TrackSize;
-        private System.Windows.Forms.Label TrackCreated;
         private System.Windows.Forms.Button RepeatBut;
         private System.Windows.Forms.Button RandomBut;
         private System.Windows.Forms.Button OrderBut;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
-        private System.Windows.Forms.Label TrackAlbum;
-        private System.Windows.Forms.Label TrackGenre;
-        private System.Windows.Forms.Label TrackArtist;
         private System.Windows.Forms.Panel searchPanel;
         private System.Windows.Forms.Button searchClearBtn;
         private System.Windows.Forms.TextBox searchTextBox;
@@ -764,6 +700,6 @@
         private System.Windows.Forms.Button historyForwardBtn;
         private System.Windows.Forms.Button favoriteButton;
         private System.Windows.Forms.Button muteButton;
-        private System.Windows.Forms.Label TrackYear;
+        private System.Windows.Forms.Button moreInfoButton;
     }
 }

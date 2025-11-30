@@ -35,6 +35,7 @@ namespace MusicLocalUI
         private bool repeatAll = false;
         private bool isSearchActive = false;
         private string currentPlaylist = "";
+        private AudioMetadata currentTrackMetadata;
 
         public class AudioMetadata
         {
@@ -450,17 +451,12 @@ namespace MusicLocalUI
                 playbackProgressBar.Value = 0;
                 playbackTimer.Start();
 
-                var metadata = GetAudioMetadata(filePath);
+                currentTrackMetadata = GetAudioMetadata(filePath);
 
-                TrackDuration.Text = "Duration: " + metadata.Duration;
-                TrackBitRate.Text = "Bit rate: " + metadata.Bitrate;
-                TrackExtension.Text = "Extension: " + metadata.FileExtension;
-                TrackSize.Text = "Size: " + metadata.FileSize;
-                TrackCreated.Text = "Created: " + metadata.CreatedDate;
-                TrackAlbum.Text = "Album: " + metadata.Album;
-                TrackGenre.Text = "Genre: " + metadata.Genre;
-                TrackArtist.Text = "Artist: " + metadata.Artist;
-                TrackYear.Text = "Year: " + metadata.Year;
+                // Базовая информация
+                TrackDuration.Text = "Duration: " + currentTrackMetadata.Duration;
+                TrackBitRate.Text = "Bit rate: " + currentTrackMetadata.Bitrate;
+                TrackSize.Text = "Size: " + currentTrackMetadata.FileSize;
 
                 string MusicName = $"Now playing: {Path.GetFileNameWithoutExtension(filePath)}";
                 NowPlaying.Text = MusicName.Length > 65
@@ -918,10 +914,24 @@ namespace MusicLocalUI
             {
                 try
                 {
-                    audioFilesList = File.ReadAllLines(openDialog.FileName).ToList();
+                    var playlistLines = File.ReadAllLines(openDialog.FileName);
+                    audioFilesList = playlistLines.Where(line =>
+                        !string.IsNullOrWhiteSpace(line) &&
+                        !line.StartsWith("#") &&
+                        File.Exists(line)).ToList();
+
                     filteredAudioFilesList.Clear();
                     filteredAudioFilesList.AddRange(audioFilesList);
                     currentPlaylist = openDialog.FileName;
+
+                    // Пересчитываем общую длительность
+                    totalDurationSeconds = 0;
+                    foreach (var file in audioFilesList)
+                    {
+                        var (duration, _) = GetAudioFileInfo(file);
+                        totalDurationSeconds += duration;
+                    }
+
                     UpdateMusicListBox();
                     MessageBox.Show("Playlist loaded successfully!", "Success",
                                   MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -934,7 +944,31 @@ namespace MusicLocalUI
             }
         }
 
+        // MORE INFO
+        private void moreInfoButton_Click(object sender, EventArgs e)
+        {
+            if (currentTrackMetadata != null)
+            {
+                string info = $"Title: {currentTrackMetadata.Title}\n" +
+                             $"Artist: {currentTrackMetadata.Artist}\n" +
+                             $"Album: {currentTrackMetadata.Album}\n" +
+                             $"Genre: {currentTrackMetadata.Genre}\n" +
+                             $"Year: {currentTrackMetadata.Year}\n" +
+                             $"Duration: {currentTrackMetadata.Duration}\n" +
+                             $"Bitrate: {currentTrackMetadata.Bitrate}\n" +
+                             $"File Extension: {currentTrackMetadata.FileExtension}\n" +
+                             $"File Size: {currentTrackMetadata.FileSize}\n" +
+                             $"Created: {currentTrackMetadata.CreatedDate}";
 
+                MessageBox.Show(info, "Track Information",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show("No track information available.", "Information",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
 
         // НАСТРОЙКИ
         private void SaveSettings()
